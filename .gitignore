@@ -1,0 +1,13 @@
+bin/
+obj/
+publish/
+[Bb]in/
+[Oo]bj/
+
+.vs/
+*.user
+*.suo
+
+Output/
+*.exe
+.idea/
