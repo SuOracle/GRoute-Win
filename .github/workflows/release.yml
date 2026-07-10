@@ -1,0 +1,102 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build, e.g. 1.2.3'
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  PROJECT: src/GRoute.Windows/GRoute.Windows.csproj
+  ISS: src/GRoute.Windows/GRoute-Setup.iss
+  RELEASE_BRANCH: main
+
+jobs:
+  release:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: ver
+        run: |
+          if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
+            $v = '${{ github.event.inputs.version }}'
+          } else {
+            $v = '${{ github.ref_name }}' -replace '^v', ''
+          }
+          if (-not ($v -match '^\d+\.\d+\.\d+$')) {
+            throw "Version '$v' must look like 1.2.3"
+          }
+          "version=$v" | Out-File $env:GITHUB_OUTPUT -Append
+          "tag=v$v"    | Out-File $env:GITHUB_OUTPUT -Append
+          Write-Host "Building GRoute $v"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Publish (self-contained win-x64)
+        run: >
+          dotnet publish "$env:PROJECT"
+          -c Release -r win-x64 --self-contained true
+          -p:Version=${{ steps.ver.outputs.version }}
+          -p:AssemblyVersion=${{ steps.ver.outputs.version }}
+          -p:FileVersion=${{ steps.ver.outputs.version }}
+          -o publish
+
+      - name: Portable zip
+        run: Compress-Archive -Path publish\* -DestinationPath "GRoute-${{ steps.ver.outputs.version }}-win-x64.zip" -Force
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          & $iscc "$env:ISS" `
+            "/DAppVersion=${{ steps.ver.outputs.version }}" `
+            "/DPublishDir=$PWD\publish" `
+            "/DOutputDir=$PWD\dist"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          gh release create "${{ steps.ver.outputs.tag }}"
+          "dist/GRoute-Setup.exe"
+          "GRoute-${{ steps.ver.outputs.version }}-win-x64.zip"
+          --title "GRoute ${{ steps.ver.outputs.version }}"
+          --generate-notes
+
+      - name: Update version.json on ${{ env.RELEASE_BRANCH }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $url = "https://github.com/${{ github.repository }}/releases/download/${{ steps.ver.outputs.tag }}/GRoute-Setup.exe"
+          $obj = [ordered]@{ version = "${{ steps.ver.outputs.version }}"; url = $url }
+          git fetch origin $env:RELEASE_BRANCH
+          git checkout $env:RELEASE_BRANCH
+          ($obj | ConvertTo-Json) | Out-File version.json -Encoding utf8
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add version.json
+          if (git status --porcelain version.json) {
+            git commit -m "Release ${{ steps.ver.outputs.version }}: update version.json"
+            git push origin $env:RELEASE_BRANCH
+          } else {
+            Write-Host "version.json already up to date"
+          }
