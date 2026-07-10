@@ -67,10 +67,11 @@ jobs:
       - name: Build installer
         run: |
           $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
-          & $iscc "$env:ISS" `
-            "/DAppVersion=${{ steps.ver.outputs.version }}" `
-            "/DPublishDir=$PWD\publish" `
-            "/DOutputDir=$PWD\dist"
+          $pub  = Join-Path $env:GITHUB_WORKSPACE 'publish'
+          $out  = Join-Path $env:GITHUB_WORKSPACE 'dist'
+          Write-Host "Publish dir: $pub"
+          Get-ChildItem $pub | Select-Object -First 5 | ForEach-Object { Write-Host $_.Name }
+          & $iscc "$env:ISS" "/DAppVersion=${{ steps.ver.outputs.version }}" "/DPublishDir=$pub" "/DOutputDir=$out"
 
       - name: Create GitHub Release
         env:
