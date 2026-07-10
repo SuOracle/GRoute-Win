@@ -22,6 +22,7 @@ public sealed class ConfigStore
     public int AutoRefreshHours { get; private set; } = 1;
     public int MixedPort { get; private set; } = 10626;
     public string LogLevel { get; private set; } = "warning";
+    public bool DarkTheme { get; private set; } = true;
 
     public ConfigStore()
     {
@@ -119,6 +120,12 @@ public sealed class ConfigStore
         Save();
     }
 
+    public void SetDarkTheme(bool dark)
+    {
+        DarkTheme = dark;
+        Save();
+    }
+
     public void Save()
     {
         try
@@ -136,7 +143,8 @@ public sealed class ConfigStore
                 Lang = Lang,
                 AutoRefreshHours = AutoRefreshHours,
                 MixedPort = MixedPort,
-                LogLevel = LogLevel
+                LogLevel = LogLevel,
+                DarkTheme = DarkTheme
             };
             File.WriteAllText(_path, JsonSerializer.Serialize(data, Options));
         }
@@ -165,6 +173,7 @@ public sealed class ConfigStore
                 AutoRefreshHours = data.AutoRefreshHours;
                 if (data.MixedPort.HasValue && data.MixedPort.Value > 0) MixedPort = data.MixedPort.Value;
                 if (!string.IsNullOrEmpty(data.LogLevel)) LogLevel = data.LogLevel;
+                if (data.DarkTheme.HasValue) DarkTheme = data.DarkTheme.Value;
             }
         }
         catch
@@ -192,5 +201,6 @@ public sealed class ConfigStore
         public int AutoRefreshHours { get; set; }
         public int? MixedPort { get; set; }
         public string? LogLevel { get; set; }
+        public bool? DarkTheme { get; set; }
     }
 }
