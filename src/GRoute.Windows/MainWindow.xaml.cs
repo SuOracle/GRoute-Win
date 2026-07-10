@@ -21,6 +21,23 @@ public partial class MainWindow : Window
     private static readonly System.Windows.Media.Brush NavActive =
         new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xCA, 0xE2, 0xFD));
 
+    private static readonly System.Windows.Media.Brush[] CfgPalette =
+    {
+        new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x5B, 0x83, 0xD6)),
+        new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x8C, 0x6B, 0xE6)),
+        new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xE6, 0x8A, 0x3D)),
+        new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xE0, 0x57, 0x5C)),
+        new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x46, 0xB7, 0xC9)),
+        new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x3D, 0x6A, 0xD6)),
+        new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xC9, 0xA1, 0x3D)),
+        new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x52, 0xC0, 0x8A)),
+        new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xB2, 0x5F, 0xD6)),
+        new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xD6, 0x68, 0x3D))
+    };
+    private static readonly System.Windows.Media.Brush CfgOther =
+        new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x44, 0x5A, 0x80));
+    private readonly System.Collections.Generic.Dictionary<string, System.Windows.Media.Brush> _cfgColors = new();
+
     private readonly XrayController _xray = new();
     private readonly TunController _tun = new();
     private readonly ConfigStore _store = new();
@@ -558,7 +575,7 @@ public partial class MainWindow : Window
         _editingConfigId = id;
         MName.Text = c.Name; MAddress.Text = c.Address; MPort.Text = c.Port.ToString();
         MUuid.Text = c.Uuid; MPassword.Text = c.Password; MFlow.Text = c.Flow; MUser.Text = c.Username;
-        MSni.Text = c.Sni; MPbk.Text = c.PublicKey; MSid.Text = c.ShortId;
+        MSni.Text = c.Sni;  MPbk.Text = c.PublicKey; MSid.Text = c.ShortId;
         MPath.Text = c.Path; MHost.Text = c.Host; MServiceName.Text = c.ServiceName; MMode.Text = c.Mode; MError.Text = "";
         MWgPrivate.Text = c.PrivateKey; MWgPublic.Text = c.PublicKey; MWgPsk.Text = c.PresharedKey;
         MWgAddress.Text = c.WgAddress; MWgMtu.Text = c.Mtu > 0 ? c.Mtu.ToString() : "1420"; MWgReserved.Text = c.Reserved;
@@ -991,10 +1008,6 @@ public partial class MainWindow : Window
 
     private void ManualHoverLeave(object sender, System.Windows.Input.MouseEventArgs e) => FlyLeave(ManualIconT, ManualTextT);
 
-    private void PingHoverEnter(object sender, System.Windows.Input.MouseEventArgs e) => FlyEnter(PingIconT, PingTextT, PingStack, PingIcon);
-
-    private void PingHoverLeave(object sender, System.Windows.Input.MouseEventArgs e) => FlyLeave(PingIconT, PingTextT);
-
     private void PingPress(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         PingRootS.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleXProperty,
@@ -1290,19 +1303,23 @@ public partial class MainWindow : Window
         {
             "system_proxy", "tun", "fragment", "split", "sniffing", "takes_effect", "add_hint", "add",
             "subscriptions", "refresh", "remove", "servers", "fastest", "delete", "route_only",
-            "nav_connect", "nav_usage", "nav_tools", "nav_about", "check_update", "nav_logs", "status_disconnected", "status_connected", "coming_soon",
+            "nav_connect", "nav_usage", "nav_tools", "nav_about", "check_update", "theme", "nav_logs", "status_disconnected", "status_connected", "coming_soon",
             "geo_files", "change", "reset", "geo_hint",
             "usage_all_time", "range_today", "range_7d", "range_30d", "range_custom",
             "usage_from", "usage_to", "usage_hint", "usage_no_data", "usage_download", "usage_upload", "usage_most_used",
             "auto_refresh", "auto_off", "cf_title", "cf_scan", "cf_use", "cf_hint", "cf_pool", "cf_stop", "cf_results",
-            "about_tagline", "about_engine", "q_title", "q_test", "q_hint", "q_rating", "q_download", "q_upload", "q_ping", "q_jitter", "q_latency", "q_ping_idle", "q_ping_down", "q_ping_up", "conn_settings", "conn_mode", "mixed_port", "port_invalid", "log_level", "log_none", "log_error", "log_warning", "log_info", "log_debug",
-            "copy", "net_off", "selected_server", "tap_choose", "choose_server", "paste_clipboard", "add_manually", "save", "cancel", "back", "test_all", "testing"
+            "about_tagline", "about_engine", "about_support", "about_source", "q_title", "q_test", "q_hint", "q_rating", "q_download", "q_upload", "q_ping", "q_jitter", "q_latency", "q_ping_idle", "q_ping_down", "q_ping_up", "conn_settings", "conn_mode", "f_alpn", "f_wgaddr", "f_address", "f_cipher", "f_fingerprint", "f_flow", "f_header", "f_hosthdr", "f_mtu", "f_mode", "f_name", "f_password", "f_path", "f_peerkey", "f_port", "f_psk", "f_privkey", "f_protocol", "f_pbk", "f_reserved", "f_sni", "f_sid", "f_uuid", "f_username", "f_grpc", "mixed_port", "port_invalid", "log_level", "log_none", "log_error", "log_warning", "log_info", "log_debug",
+            "copy", "net_off", "selected_server", "tap_choose", "choose_server", "paste_clipboard", "add_manually", "save", "cancel", "back", "test_all", "testing",
+            "edit", "rename", "search", "sort", "sort_added", "sort_alpha", "sort_fastest",
+            "quick_title", "mode_proxy", "mode_proxy_d", "mode_system", "mode_system_d", "mode_tun", "mode_tun_d"
         };
         foreach (var k in keys) Resources["Str." + k] = Strings.Get(_lang, k);
 
         FlowDirection = _lang == Lang.Fa
             ? System.Windows.FlowDirection.RightToLeft
             : System.Windows.FlowDirection.LeftToRight;
+
+        PingLabelConverter.Farsi = _lang == Lang.Fa;
 
         FontFamily = _lang == Lang.Fa
             ? new System.Windows.Media.FontFamily("Vazirmatn, Tahoma, Segoe UI")
@@ -1684,6 +1701,16 @@ public partial class MainWindow : Window
         _store.Save();
         RebuildGroups();
         AppendLine($"Applied {ip} to {cfg.Name}.");
+    }
+
+    private void OpenTelegram(object sender, RoutedEventArgs e)
+    {
+        try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://t.me/OracleVPNSupport") { UseShellExecute = true }); } catch { }
+    }
+
+    private void OpenSource(object sender, RoutedEventArgs e)
+    {
+        try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://github.com/SuOracle/GRoute-Win") { UseShellExecute = true }); } catch { }
     }
 
     private void OpenQuality(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -2325,48 +2352,48 @@ public partial class MainWindow : Window
         switch (c.Protocol)
         {
             case "vless":
-                {
-                    var q = "encryption=" + System.Uri.EscapeDataString(string.IsNullOrEmpty(c.Encryption) ? "none" : c.Encryption)
-                            + Q("security", c.Security) + Q("type", c.Network) + Q("sni", c.Sni)
-                            + Q("fp", c.Fingerprint) + Q("pbk", c.PublicKey) + Q("sid", c.ShortId)
-                            + Q("flow", c.Flow) + Q("host", c.Host) + Q("path", c.Path);
-                    return "vless://" + c.Uuid + "@" + c.Address + ":" + c.Port + "?" + q + "#" + name;
-                }
+            {
+                var q = "encryption=" + System.Uri.EscapeDataString(string.IsNullOrEmpty(c.Encryption) ? "none" : c.Encryption)
+                        + Q("security", c.Security) + Q("type", c.Network) + Q("sni", c.Sni)
+                        + Q("fp", c.Fingerprint) + Q("pbk", c.PublicKey) + Q("sid", c.ShortId)
+                        + Q("flow", c.Flow) + Q("host", c.Host) + Q("path", c.Path);
+                return "vless://" + c.Uuid + "@" + c.Address + ":" + c.Port + "?" + q + "#" + name;
+            }
             case "trojan":
-                {
-                    var q = "security=" + System.Uri.EscapeDataString(string.IsNullOrEmpty(c.Security) ? "tls" : c.Security)
-                            + Q("type", c.Network) + Q("sni", c.Sni) + Q("fp", c.Fingerprint)
-                            + Q("pbk", c.PublicKey) + Q("sid", c.ShortId) + Q("flow", c.Flow)
-                            + Q("host", c.Host) + Q("path", c.Path);
-                    return "trojan://" + System.Uri.EscapeDataString(c.Password) + "@" + c.Address + ":" + c.Port + "?" + q + "#" + name;
-                }
+            {
+                var q = "security=" + System.Uri.EscapeDataString(string.IsNullOrEmpty(c.Security) ? "tls" : c.Security)
+                        + Q("type", c.Network) + Q("sni", c.Sni) + Q("fp", c.Fingerprint)
+                        + Q("pbk", c.PublicKey) + Q("sid", c.ShortId) + Q("flow", c.Flow)
+                        + Q("host", c.Host) + Q("path", c.Path);
+                return "trojan://" + System.Uri.EscapeDataString(c.Password) + "@" + c.Address + ":" + c.Port + "?" + q + "#" + name;
+            }
             case "vmess":
+            {
+                var o = new System.Collections.Generic.Dictionary<string, string>
                 {
-                    var o = new System.Collections.Generic.Dictionary<string, string>
-                    {
-                        ["v"] = "2",
-                        ["ps"] = c.Name ?? "",
-                        ["add"] = c.Address,
-                        ["port"] = c.Port.ToString(),
-                        ["id"] = c.Uuid,
-                        ["aid"] = c.AlterId.ToString(),
-                        ["scy"] = string.IsNullOrEmpty(c.Encryption) ? "auto" : c.Encryption,
-                        ["net"] = c.Network,
-                        ["type"] = "none",
-                        ["host"] = c.Host,
-                        ["path"] = c.Path,
-                        ["tls"] = c.Security == "tls" ? "tls" : "",
-                        ["sni"] = c.Sni
-                    };
-                    var json = System.Text.Json.JsonSerializer.Serialize(o);
-                    return "vmess://" + System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
-                }
+                    ["v"] = "2",
+                    ["ps"] = c.Name ?? "",
+                    ["add"] = c.Address,
+                    ["port"] = c.Port.ToString(),
+                    ["id"] = c.Uuid,
+                    ["aid"] = c.AlterId.ToString(),
+                    ["scy"] = string.IsNullOrEmpty(c.Encryption) ? "auto" : c.Encryption,
+                    ["net"] = c.Network,
+                    ["type"] = "none",
+                    ["host"] = c.Host,
+                    ["path"] = c.Path,
+                    ["tls"] = c.Security == "tls" ? "tls" : "",
+                    ["sni"] = c.Sni
+                };
+                var json = System.Text.Json.JsonSerializer.Serialize(o);
+                return "vmess://" + System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
+            }
             case "ss":
             case "shadowsocks":
-                {
-                    var userinfo = System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(c.Method + ":" + c.Password));
-                    return "ss://" + userinfo + "@" + c.Address + ":" + c.Port + "#" + name;
-                }
+            {
+                var userinfo = System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(c.Method + ":" + c.Password));
+                return "ss://" + userinfo + "@" + c.Address + ":" + c.Port + "#" + name;
+            }
             default:
                 return "";
         }
@@ -2530,15 +2557,17 @@ public partial class MainWindow : Window
             TopConfigBox.Visibility = Visibility.Collapsed;
         }
 
-        System.Collections.Generic.List<UsageStore.Bar> bars = _range switch
+        System.Collections.Generic.List<UsageStore.StackBar> bars = _range switch
         {
-            UsageRange.Today => UsageStore.HourlyToday(),
-            UsageRange.Week => UsageStore.DailyBars(7),
-            UsageRange.Month => UsageStore.DailyBars(30),
-            _ => CustomBars()
+            UsageRange.Today => UsageStore.HourlyTodayStacked(),
+            UsageRange.Week => UsageStore.DailyStacked(7),
+            UsageRange.Month => UsageStore.DailyStacked(30),
+            _ => CustomStacked()
         };
 
-        var sum = UsageStore.Sum(bars);
+        AssignConfigColors(bars);
+
+        var sum = UsageStore.SumStacked(bars);
         UsageDownText.Text = Strings.LocalizeDigits(FormatBytes(sum[1]), _lang);
         UsageUpText.Text = Strings.LocalizeDigits(FormatBytes(sum[0]), _lang);
 
@@ -2553,51 +2582,155 @@ public partial class MainWindow : Window
         CustomDates.Visibility = _range == UsageRange.Custom ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    private System.Collections.Generic.List<UsageStore.Bar> CustomBars()
+    private System.Collections.Generic.List<UsageStore.StackBar> CustomStacked()
     {
         var from = FromDate.SelectedDate ?? DateTime.Today.AddDays(-6);
         var to = ToDate.SelectedDate ?? DateTime.Today;
         int span = Math.Abs((to.Date - from.Date).Days);
-        return span <= 2 ? UsageStore.HourlyBarsRange(from, to) : UsageStore.DailyBarsRange(from, to);
+        return span <= 2 ? UsageStore.HourlyStackedRange(from, to) : UsageStore.DailyStackedRange(from, to);
     }
 
-    private void BuildChart(System.Collections.Generic.List<UsageStore.Bar> bars)
+    private void AssignConfigColors(System.Collections.Generic.List<UsageStore.StackBar> bars)
+    {
+        _cfgColors.Clear();
+        var totals = new System.Collections.Generic.Dictionary<string, long>();
+        foreach (var b in bars)
+            foreach (var s in b.Segments)
+            {
+                if (string.IsNullOrEmpty(s.Config)) continue;
+                totals.TryGetValue(s.Config, out var t);
+                totals[s.Config] = t + s.Total;
+            }
+        var ordered = new System.Collections.Generic.List<string>(totals.Keys);
+        ordered.Sort((a, b) => totals[b].CompareTo(totals[a]));
+        for (int i = 0; i < ordered.Count; i++)
+            _cfgColors[ordered[i]] = CfgPalette[i % CfgPalette.Length];
+    }
+
+    private System.Windows.Media.Brush ColorFor(string cfg)
+        => string.IsNullOrEmpty(cfg)
+            ? CfgOther
+            : (_cfgColors.TryGetValue(cfg, out var b) ? b : CfgOther);
+
+    private void BuildChart(System.Collections.Generic.List<UsageStore.StackBar> bars)
     {
         ChartGrid.Children.Clear();
         ChartGrid.ColumnDefinitions.Clear();
         if (bars.Count == 0) return;
-        long max = Math.Max(1, bars.Max(b => b.Total));
+        long max = 1;
+        foreach (var b in bars) if (b.Total > max) max = b.Total;
         for (int i = 0; i < bars.Count; i++)
         {
             ChartGrid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition());
             var b = bars[i];
             if (b.Total <= 0) continue;
-            double frac = (double)b.Total / max;
-            var bar = new System.Windows.Controls.Border
+            double fullH = Math.Max(3.0, (double)b.Total / max * 150.0);
+
+            var stack = new System.Windows.Controls.StackPanel
             {
-                Height = Math.Max(3, frac * 150),
+                Orientation = System.Windows.Controls.Orientation.Vertical,
                 VerticalAlignment = System.Windows.VerticalAlignment.Bottom,
-                Margin = new System.Windows.Thickness(2, 0, 2, 0),
-                CornerRadius = new System.Windows.CornerRadius(3, 3, 0, 0),
-                Background = Accent
+                Margin = new System.Windows.Thickness(2, 0, 2, 0)
             };
-            var tip = new System.Windows.Controls.ToolTip
+
+            var active = b.Segments.Where(s => s.Total > 0).ToList();
+            for (int j = 0; j < active.Count; j++)
+            {
+                var s = active[j];
+                double segH = Math.Max(1.0, (double)s.Total / b.Total * fullH);
+                stack.Children.Add(new System.Windows.Controls.Border
+                {
+                    Height = segH,
+                    Background = ColorFor(s.Config),
+                    CornerRadius = j == 0
+                        ? new System.Windows.CornerRadius(3, 3, 0, 0)
+                        : new System.Windows.CornerRadius(0)
+                });
+            }
+
+            stack.ToolTip = new System.Windows.Controls.ToolTip
             {
                 Style = (System.Windows.Style)Resources["ChartTip"],
-                Content = Strings.LocalizeDigits($"{b.Label}\n\u2193 {FormatBytes(b.Down)}   \u2191 {FormatBytes(b.Up)}\n\u03A3 {FormatBytes(b.Total)}", _lang)
+                Content = BuildUsageTip(b)
             };
-            bar.ToolTip = tip;
-            System.Windows.Controls.ToolTipService.SetInitialShowDelay(bar, 120);
-            bar.MouseEnter += (s, _) => ((System.Windows.Controls.Border)s!).Background = BarHot;
-            bar.MouseLeave += (s, _) => ((System.Windows.Controls.Border)s!).Background = Accent;
-            System.Windows.Controls.Grid.SetColumn(bar, i);
-            ChartGrid.Children.Add(bar);
+            System.Windows.Controls.ToolTipService.SetInitialShowDelay(stack, 120);
+            stack.MouseEnter += (snd, _) => ((System.Windows.Controls.StackPanel)snd!).Opacity = 0.82;
+            stack.MouseLeave += (snd, _) => ((System.Windows.Controls.StackPanel)snd!).Opacity = 1.0;
+
+            System.Windows.Controls.Grid.SetColumn(stack, i);
+            ChartGrid.Children.Add(stack);
         }
     }
 
-    private System.Collections.Generic.List<UsageStore.Bar>? _labelBars;
+    private System.Windows.FrameworkElement BuildUsageTip(UsageStore.StackBar b)
+    {
+        var root = new System.Windows.Controls.StackPanel { MinWidth = 188 };
 
-    private void BuildLabels(System.Collections.Generic.List<UsageStore.Bar> bars)
+        root.Children.Add(new System.Windows.Controls.TextBlock
+        {
+            Text = Strings.LocalizeDigits(b.Label, _lang),
+            Foreground = System.Windows.Media.Brushes.White,
+            FontSize = 13,
+            FontWeight = System.Windows.FontWeights.Bold,
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+            FlowDirection = System.Windows.FlowDirection.LeftToRight
+        });
+        root.Children.Add(new System.Windows.Controls.TextBlock
+        {
+            Text = Strings.LocalizeDigits($"{Strings.Get(_lang, "total")}: {FormatBytes(b.Total)}", _lang),
+            Foreground = Muted,
+            FontSize = 11.5,
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+            Margin = new System.Windows.Thickness(0, 1, 0, 8),
+            FlowDirection = System.Windows.FlowDirection.LeftToRight
+        });
+
+        foreach (var s in b.Segments)
+        {
+            if (s.Total <= 0) continue;
+            var row = new System.Windows.Controls.StackPanel
+            {
+                Orientation = System.Windows.Controls.Orientation.Horizontal,
+                Margin = new System.Windows.Thickness(0, 4, 0, 0),
+                FlowDirection = System.Windows.FlowDirection.LeftToRight
+            };
+            row.Children.Add(new System.Windows.Shapes.Ellipse
+            {
+                Width = 9,
+                Height = 9,
+                Fill = ColorFor(s.Config),
+                VerticalAlignment = System.Windows.VerticalAlignment.Center,
+                Margin = new System.Windows.Thickness(0, 0, 7, 0)
+            });
+            string name = string.IsNullOrEmpty(s.Config)
+                ? Strings.Get(_lang, "usage_other")
+                : Flags.DisplayName(s.Config);
+            row.Children.Add(new System.Windows.Controls.TextBlock
+            {
+                Text = name,
+                Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xDC, 0xE6, 0xF5)),
+                FontSize = 12,
+                FontWeight = System.Windows.FontWeights.SemiBold,
+                VerticalAlignment = System.Windows.VerticalAlignment.Center,
+                TextTrimming = System.Windows.TextTrimming.CharacterEllipsis,
+                MaxWidth = 150
+            });
+            root.Children.Add(row);
+            root.Children.Add(new System.Windows.Controls.TextBlock
+            {
+                Text = Strings.LocalizeDigits($"\u2191 {FormatBytes(s.Up)}    \u2193 {FormatBytes(s.Down)}", _lang),
+                Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x8F, 0xA3, 0xC8)),
+                FontSize = 11,
+                Margin = new System.Windows.Thickness(16, 1, 0, 0),
+                FlowDirection = System.Windows.FlowDirection.LeftToRight
+            });
+        }
+        return root;
+    }
+
+    private System.Collections.Generic.List<UsageStore.StackBar>? _labelBars;
+
+    private void BuildLabels(System.Collections.Generic.List<UsageStore.StackBar> bars)
     {
         _labelBars = bars;
         RenderLabels();

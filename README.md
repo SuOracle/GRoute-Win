@@ -1,94 +1,53 @@
-<div align="center">
-
 # GRoute for Windows
 
-**A fast, private VPN client for Windows — built on [Xray-core](https://github.com/XTLS/Xray-core).**
+A Windows desktop client for GRoute, built in C# / WPF on .NET 8. It controls a bundled `xray.exe` core and routes traffic through it, mirroring the Android app.
 
-Split routing, WireGuard, and a clean native desktop UI.
+This is **Phase 1** of a phased build.
 
+## Status
 
-[**Download**](https://github.com/SuOracle/GRoute-Win/releases/latest/download/GRoute-Setup.exe) · [Report a bug](https://github.com/SuOracle/GRoute-Win/issues) · [Releases](https://github.com/SuOracle/GRoute-Win/releases)
-
-</div>
-
----
-
-## Overview
-
-GRoute is a lightweight desktop VPN client that helps you pass through network restrictions. It wraps the Xray-core engine in a native Windows interface with a one-tap connect experience, per-app-free split routing that keeps local traffic direct, and a set of built-in tools for finding and testing fast servers.
-
-## Features
-
-- **Multiple protocols** — VLESS, VMess, Trojan, Shadowsocks, WireGuard, and HTTP/SOCKS.
-- **Two connection modes** — System proxy or full TUN (system-wide) tunneling.
-- **Split routing** — send Iran-bound traffic directly while everything else goes through the tunnel.
-- **Fragment (anti-DPI)** and configurable **traffic sniffing** (TLS / HTTP / QUIC / FakeDNS).
-- **Cloudflare clean-IP scanner** — find responsive Cloudflare edges and apply them to your config.
-- **Internet quality test** — download, upload, idle/loaded ping, jitter, and an overall rating.
-- **Usage stats** — hourly and daily charts, per-config totals, and your most-used server.
-- **System tray** — quick connect/disconnect and connection-mode switching from the notification area.
-- **Built-in updater** — checks GitHub for new versions.
-- **Bilingual** — English and Persian (فارسی) with full RTL support.
+- **Phase 1 (this) — skeleton + system proxy.** Solution, project, tray + main window, Xray process controller, and Windows system-proxy plumbing. Connecting launches `xray.exe` under app control and points the Windows system proxy at it, end to end.
+- **Phase 2 — config port.** `ProxyConfig`, `ConfigParser`, `ConfigBuilder`, `Subscription`, `SubscriptionFetcher` ported from the Kotlin app, so you can paste a link or subscription and connect to a real server.
+- **Phase 3 — TUN mode.** `wintun.dll` + `tun2socks.exe`, TUN adapter creation, route management, and UAC self-elevation for full-device VPN.
+- **Phase 4 — WiX MSI installer** bundling the app and native binaries.
 
 ## Requirements
 
-- Windows 10 or 11 (64-bit)
-- Administrator rights (required for the TUN adapter and system-proxy changes)
+- .NET 8 SDK
+- Visual Studio 2022 (17.8+) or `dotnet` CLI
+- Windows 10 1809+ / Windows 11
 
-The installer is self-contained — no separate .NET runtime installation is needed.
+## Getting started
 
-## Installation
+1. Add `xray.exe` to `src/GRoute.Windows/libs/` (see `libs/README.md`).
+2. Open `GRoute.Windows.sln` in Visual Studio, or run:
+   ```
+   dotnet run --project src/GRoute.Windows
+   ```
+3. Leave the mode on **System Proxy**, click **Connect**. Xray starts, the system proxy is set to `127.0.0.1:10809`, and the log panel shows Xray output. Click **Disconnect** to stop and clear the proxy.
 
-1. Download **`GRoute-Setup.exe`** from the [latest release](https://github.com/SuOracle/GRoute-Win/releases/latest).
-2. Run the installer and follow the prompts.
-3. Launch GRoute and add a server (paste a config link, import from clipboard, or add one manually).
+Closing the window minimises to the tray; the app keeps running. Right-click the tray icon and choose **Exit** to quit fully (which disconnects and clears the system proxy).
 
-> **First-run SmartScreen warning:** GRoute isn't code-signed yet, so Windows may show a blue **"Windows protected your PC"** screen. Click **More info → Run anyway** to continue. This is expected for new, unsigned apps and does not indicate a problem with the download.
+## Notes
 
-## Usage
+- Phase 1 ships a minimal test config (SOCKS on 10626, HTTP on 10809, direct outbound) purely to verify the control path. Phase 2 replaces it with configs built from your real servers.
+- **TUN** is present in the UI but disabled until Phase 3; it needs admin rights, which the app will request by self-elevating at that point.
+- The app runs `asInvoker` (no admin) for the system-proxy path, which writes only to the current user's proxy settings.
 
-- **Connect:** pick a server from the list and press the power button on the home screen.
-- **Connection mode:** tap the mode selector on the home screen (or the tray icon) to switch between Just Proxy, System Proxy, and VPN Tunnel.
-- **Add servers:** paste a `vless://`, `vmess://`, `trojan://`, `ss://`, or `wireguard://` link, subscribe to a URL, or fill in the manual form.
-- **Tools:** open the Tools tab for the Cloudflare scanner and the internet-quality test.
-- **Settings:** adjust split routing, fragment, sniffing, mixed port, and log level under Connection Settings.
+## Project layout
 
-## Building from source
-
-```bash
-# Requires the .NET 8 SDK
-git clone https://github.com/SuOracle/GRoute-Win.git
-cd GRoute-Win/src/GRoute.Windows
-
-# Run in development
-dotnet run
-
-# Produce a distributable, self-contained build
-dotnet publish GRoute_Windows.csproj -c Release -r win-x64 --self-contained true -o bin/Release/net8.0-windows/win-x64/publish
 ```
-
-The installer is built from `GRoute.iss` with [Inno Setup](https://jrsoftware.org/isinfo.php).
-
-## Tech stack
-
-- **.NET 8** · **WPF** (C#) for the desktop UI
-- **[Xray-core](https://github.com/XTLS/Xray-core)** as the proxy engine
-- **Inno Setup** for packaging
-
-## Updates
-
-GRoute checks for new versions from within the app (menu → **Check for updates**). When an update is available, it links to the latest release here on GitHub.
-
-## Disclaimer
-
-GRoute is a tool for protecting privacy and accessing an open internet. You are responsible for complying with the laws and regulations that apply to you. The developers provide this software as-is, without warranty of any kind.
-
-## License
-
-See the [LICENSE](LICENSE) file for details.
-
----
-
-<div align="center">
-Made with care for a free and open internet.
-</div>
+GRoute.Windows.sln
+src/GRoute.Windows/
+  GRoute.Windows.csproj
+  app.manifest
+  App.xaml(.cs)
+  MainWindow.xaml(.cs)
+  Core/
+    Enums.cs
+    XrayController.cs
+    SystemProxy.cs
+    TunController.cs      (stub until Phase 3)
+    TestConfig.cs
+  libs/                   (drop xray.exe here)
+```

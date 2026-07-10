@@ -48,13 +48,21 @@ public sealed class PingGlowConverter : IValueConverter
 
 public sealed class PingLabelConverter : IValueConverter
 {
+    public static bool Farsi;
+
+    private static readonly string[] Fa = { "۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹" };
+
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         int i = value is int v ? v : int.MinValue;
         if (i == int.MinValue) return "";
         if (i == -2) return "\u2026";
-        if (i == -1) return "fail";
-        return i + " ms";
+        if (i == -1) return Farsi ? "خطا" : "fail";
+        string s = i + " ms";
+        if (!Farsi) return s;
+        var sb = new System.Text.StringBuilder(s.Length);
+        foreach (var c in s) sb.Append(c is >= '0' and <= '9' ? Fa[c - '0'] : c);
+        return sb.ToString();
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotSupportedException();

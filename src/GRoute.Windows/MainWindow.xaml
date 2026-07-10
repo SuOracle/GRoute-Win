@@ -18,6 +18,9 @@
         <WindowChrome CaptionHeight="42" CornerRadius="10" GlassFrameThickness="1" ResizeBorderThickness="0" UseAeroCaptionButtons="False"/>
     </WindowChrome.WindowChrome>
     <Window.Resources>
+        <Style TargetType="Path">
+            <Setter Property="FlowDirection" Value="LeftToRight"/>
+        </Style>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <local:FlagConverter x:Key="FlagConv"/>
         <local:FlagNameConverter x:Key="FlagNameConv"/>
@@ -496,7 +499,7 @@
                             <Border.RenderTransform>
                                 <ScaleTransform x:Name="Sc" ScaleX="1" ScaleY="1"/>
                             </Border.RenderTransform>
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -1811,7 +1814,7 @@
                                     <Path Data="M2,14 h2.6 v-5 h-2.6 z M6.7,14 h2.6 v-9 h-2.6 z M11.4,14 h2.6 v-12 h-2.6 z"
                                           Fill="#8FA3C8" Width="13" Height="12" Stretch="Uniform" VerticalAlignment="Center"/>
                                     <TextBlock x:Name="TotalText" Foreground="#B9C6E2" FontSize="11.5" FontFamily="Consolas"
-                                               VerticalAlignment="Center" Margin="7,0,0,0"/>
+                                               FlowDirection="LeftToRight" VerticalAlignment="Center" Margin="7,0,0,0"/>
                                 </StackPanel>
                             </Border>
                             <Border x:Name="Chip5" Background="#0E1A38" BorderBrush="#22355E" BorderThickness="1"
@@ -1830,7 +1833,6 @@
                             </Border>
                             <Button x:Name="PingButton" Click="PingButton_Click" Background="Transparent" BorderThickness="0"
                                     Cursor="Hand" FocusVisualStyle="{x:Null}" HorizontalAlignment="Left" Margin="0" Opacity="0"
-                                    MouseEnter="PingHoverEnter" MouseLeave="PingHoverLeave"
                                     PreviewMouseLeftButtonDown="PingPress" PreviewMouseLeftButtonUp="PingRelease">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
@@ -2068,7 +2070,7 @@
                                         <Border.Effect>
                                             <DropShadowEffect x:Name="TestGlow" Color="#6E9CF0" BlurRadius="12" ShadowDepth="0" Opacity="0"/>
                                         </Border.Effect>
-                                        <StackPanel Orientation="Horizontal" Margin="14,6" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Margin="14,6" HorizontalAlignment="Center" VerticalAlignment="Center" FlowDirection="LeftToRight">
                                             <Path Data="M8.5,1 L3,9 H7.5 L6.5,15 L13,6.5 H8 Z"
                                                   Fill="#EAF2FF" Width="13" Height="15" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                             <TextBlock x:Name="TestAllText" Text="{DynamicResource Str.test_all}" Foreground="White"
@@ -2388,9 +2390,9 @@
 
                 <ScrollViewer Style="{StaticResource EdgeShift}" x:Name="ManualScroll" Grid.Row="1" ScrollChanged="ManualScroll_ScrollChanged" VerticalScrollBarVisibility="Auto" CanContentScroll="False" FocusVisualStyle="{x:Null}">
                     <StackPanel>
-                        <TextBlock Text="Name (optional)" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                        <TextBlock Text="{DynamicResource Str.f_name}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                         <TextBox x:Name="MName" Style="{StaticResource FormInput}"/>
-                        <TextBlock Text="Protocol" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                        <TextBlock Text="{DynamicResource Str.f_protocol}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                         <ComboBox x:Name="MProtocol" Style="{StaticResource FormCombo}" SelectionChanged="FieldSel_Changed">
                             <sys:String>vless</sys:String>
                             <sys:String>vmess</sys:String>
@@ -2400,24 +2402,24 @@
                             <sys:String>http</sys:String>
                             <sys:String>wireguard</sys:String>
                         </ComboBox>
-                        <TextBlock Text="Address" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                        <TextBlock Text="{DynamicResource Str.f_address}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                         <TextBox x:Name="MAddress" Style="{StaticResource FormInput}"/>
-                        <TextBlock Text="Port" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                        <TextBlock Text="{DynamicResource Str.f_port}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                         <TextBox x:Name="MPort" Style="{StaticResource FormInput}"/>
                         <StackPanel x:Name="Fld_Uuid">
-                            <TextBlock Text="UUID" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_uuid}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <TextBox x:Name="MUuid" Style="{StaticResource FormInput}"/>
                         </StackPanel>
                         <StackPanel x:Name="Fld_Username" Visibility="Collapsed">
-                            <TextBlock Text="Username (optional)" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_username}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <TextBox x:Name="MUser" Style="{StaticResource FormInput}"/>
                         </StackPanel>
                         <StackPanel x:Name="Fld_Password">
-                            <TextBlock Text="Password" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_password}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <TextBox x:Name="MPassword" Style="{StaticResource FormInput}"/>
                         </StackPanel>
                         <StackPanel x:Name="Fld_Method">
-                            <TextBlock Text="Cipher" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_cipher}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <ComboBox x:Name="MMethod" Style="{StaticResource FormCombo}">
                                 <sys:String>aes-256-gcm</sys:String>
                                 <sys:String>aes-128-gcm</sys:String>
@@ -2429,21 +2431,21 @@
                             </ComboBox>
                         </StackPanel>
                         <StackPanel x:Name="Fld_Flow">
-                            <TextBlock Text="Flow (optional)" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_flow}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <TextBox x:Name="MFlow" Style="{StaticResource FormInput}"/>
                         </StackPanel>
                         <StackPanel x:Name="Fld_Wg" Visibility="Collapsed">
-                            <TextBlock Text="Private key" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_privkey}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <TextBox x:Name="MWgPrivate" Style="{StaticResource FormInput}"/>
-                            <TextBlock Text="Peer public key" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_peerkey}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <TextBox x:Name="MWgPublic" Style="{StaticResource FormInput}"/>
-                            <TextBlock Text="Pre-shared key (optional)" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_psk}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <TextBox x:Name="MWgPsk" Style="{StaticResource FormInput}"/>
-                            <TextBlock Text="Address (e.g. 10.0.0.2/32)" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_wgaddr}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <TextBox x:Name="MWgAddress" Style="{StaticResource FormInput}"/>
-                            <TextBlock Text="MTU" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_mtu}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <TextBox x:Name="MWgMtu" Style="{StaticResource FormInput}"/>
-                            <TextBlock Text="Reserved (optional, e.g. 1,2,3)" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_reserved}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <TextBox x:Name="MWgReserved" Style="{StaticResource FormInput}"/>
                         </StackPanel>
                         <TextBlock x:Name="TransportLabel" Text="Transport" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
@@ -2458,26 +2460,26 @@
                             <sys:String>xhttp</sys:String>
                         </ComboBox>
                         <StackPanel x:Name="Fld_HeaderType">
-                            <TextBlock Text="Header type" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_header}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <ComboBox x:Name="MHeaderType" Style="{StaticResource FormCombo}">
                                 <sys:String>none</sys:String>
                                 <sys:String>http</sys:String>
                             </ComboBox>
                         </StackPanel>
                         <StackPanel x:Name="Fld_Path">
-                            <TextBlock Text="Path / seed" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_path}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <TextBox x:Name="MPath" Style="{StaticResource FormInput}"/>
                         </StackPanel>
                         <StackPanel x:Name="Fld_Host">
-                            <TextBlock Text="Host header" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_hosthdr}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <TextBox x:Name="MHost" Style="{StaticResource FormInput}"/>
                         </StackPanel>
                         <StackPanel x:Name="Fld_ServiceName">
-                            <TextBlock Text="gRPC service name" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_grpc}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <TextBox x:Name="MServiceName" Style="{StaticResource FormInput}"/>
                         </StackPanel>
                         <StackPanel x:Name="Fld_Mode">
-                            <TextBlock Text="Mode (grpc: gun/multi, xhttp)" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_mode}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <TextBox x:Name="MMode" Style="{StaticResource FormInput}"/>
                         </StackPanel>
                         <TextBlock x:Name="SecurityLabel" Text="Security" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
@@ -2487,11 +2489,11 @@
                             <sys:String>reality</sys:String>
                         </ComboBox>
                         <StackPanel x:Name="Fld_Sni">
-                            <TextBlock Text="SNI / server name" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_sni}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <TextBox x:Name="MSni" Style="{StaticResource FormInput}"/>
                         </StackPanel>
                         <StackPanel x:Name="Fld_Alpn">
-                            <TextBlock Text="ALPN" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_alpn}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <ComboBox x:Name="MAlpn" Style="{StaticResource FormCombo}">
                                 <sys:String>none</sys:String>
                                 <sys:String>h2,http/1.1</sys:String>
@@ -2500,7 +2502,7 @@
                             </ComboBox>
                         </StackPanel>
                         <StackPanel x:Name="Fld_Fingerprint">
-                            <TextBlock Text="Fingerprint" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_fingerprint}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <ComboBox x:Name="MFingerprint" Style="{StaticResource FormCombo}">
                                 <sys:String>chrome</sys:String>
                                 <sys:String>firefox</sys:String>
@@ -2512,11 +2514,11 @@
                             </ComboBox>
                         </StackPanel>
                         <StackPanel x:Name="Fld_Pbk">
-                            <TextBlock Text="Public key (reality pbk)" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_pbk}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <TextBox x:Name="MPbk" Style="{StaticResource FormInput}"/>
                         </StackPanel>
                         <StackPanel x:Name="Fld_Sid">
-                            <TextBlock Text="Short ID (reality sid)" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
+                            <TextBlock Text="{DynamicResource Str.f_sid}" Foreground="#9FB3D6" FontSize="13" Margin="11,0,0,4"/>
                             <TextBox x:Name="MSid" Style="{StaticResource FormInput}"/>
                         </StackPanel>
                         <TextBlock x:Name="MError" Foreground="#E57373" FontSize="12" Margin="0,0,0,4"/>
@@ -3015,16 +3017,53 @@
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                     <Image Source="GRouteTransparent.png" Width="150" HorizontalAlignment="Center"
                            RenderOptions.BitmapScalingMode="HighQuality"/>
-                    <TextBlock Text="GRoute" Foreground="White" FontSize="26" FontWeight="Bold" FontFamily="pack://application:,,,/GRoute;component/Fonts/#Lexend Bold, Segoe UI"
-                               HorizontalAlignment="Center" Margin="0,12,0,4"/>
                     <TextBlock x:Name="AboutVersion" Foreground="#9FB3D6" FontSize="13"
-                               HorizontalAlignment="Center" FlowDirection="LeftToRight"/>
+                               HorizontalAlignment="Center" Margin="0,10,0,0" FlowDirection="LeftToRight"/>
                     <TextBlock Text="{DynamicResource Str.about_tagline}" Foreground="#C9D4EA" FontSize="14"
                                HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
                                MaxWidth="300" Margin="0,18,0,0"/>
                     <TextBlock Text="{DynamicResource Str.about_engine}" Foreground="#9FB3D6" FontSize="12"
-                               HorizontalAlignment="Center" Margin="0,10,0,0" FlowDirection="LeftToRight"/>
-                    <TextBlock Text="© 2026 GRoute" Foreground="#5E6E8C" FontSize="11"
+                               HorizontalAlignment="Center" Margin="0,10,0,0"/>
+
+                    <Border Background="#0E1A38" CornerRadius="12" BorderBrush="#22345B" BorderThickness="1" Padding="16,12" Margin="0,22,0,0" HorizontalAlignment="Center">
+                        <StackPanel>
+                            <Button Style="{StaticResource ToolGhost}" Click="OpenTelegram" Padding="8,7" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                                <Grid HorizontalAlignment="Left">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Viewbox Grid.Column="0" Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="Uniform">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Data="M21 3 L3 10.5 L10 13.5 L13 20.5 Z M21 3 L10 13.5" Stroke="#6E9CF0" StrokeThickness="1.9"
+                                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                    <TextBlock Grid.Column="1" Text="{DynamicResource Str.about_support}" Foreground="#C9D4EA" FontSize="12.5" VerticalAlignment="Center" Margin="8,0,0,0"
+                                               FontFamily="pack://application:,,,/GRoute;component/Fonts/#Lexend, Segoe UI"/>
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#1A2C4E" Margin="0,8,0,8"/>
+                            <Button Style="{StaticResource ToolGhost}" Click="OpenSource" Padding="8,7" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                                <Grid HorizontalAlignment="Left">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Viewbox Grid.Column="0" Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="Uniform">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Data="M9 19c-5 1.5-5-2.5-7-3 M15 22v-4a3.5 3.5 0 0 0-1-2.7c3.3-.4 6.5-1.6 6.5-7A5.4 5.4 0 0 0 20 5.8 5 5 0 0 0 19.9 2S18.7 1.6 16 3.4a13 13 0 0 0-7 0C6.3 1.6 5.1 2 5.1 2A5 5 0 0 0 5 5.8 5.4 5.4 0 0 0 3.5 9.5c0 5.4 3.2 6.6 6.5 7A3.5 3.5 0 0 0 9 18v4"
+                                                  Stroke="#6E9CF0" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                    <TextBlock Grid.Column="1" Text="{DynamicResource Str.about_source}" Foreground="#C9D4EA" FontSize="12.5" VerticalAlignment="Center" Margin="8,0,0,0"
+                                               FontFamily="pack://application:,,,/GRoute;component/Fonts/#Lexend, Segoe UI"/>
+                                </Grid>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="© 2026 Oracle VPN" Foreground="#5E6E8C" FontSize="11"
                                HorizontalAlignment="Center" Margin="0,18,0,0" FlowDirection="LeftToRight"/>
                 </StackPanel>
             </Grid>
@@ -3121,10 +3160,22 @@
 
         </Grid>
     </Grid>
-        <Grid x:Name="MenuOverlay" Grid.Row="1" Visibility="Collapsed">
+        <Grid x:Name="MenuOverlay" Grid.Row="1" Visibility="Collapsed" FlowDirection="LeftToRight">
             <Border x:Name="MenuScrim" Background="#000000" Opacity="0" MouseLeftButtonUp="CloseMenu_Click"/>
-            <Border x:Name="MenuDrawer" HorizontalAlignment="Left" Width="232" Background="#0E1A38"
-                    BorderBrush="#35548C" BorderThickness="0,0,1,0" Padding="10,14,10,14">
+            <Border x:Name="MenuDrawer" Width="232" Background="#0E1A38"
+                    BorderBrush="#35548C" Padding="10,14,10,14">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="HorizontalAlignment" Value="Left"/>
+                        <Setter Property="BorderThickness" Value="0,0,1,0"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding FlowDirection, RelativeSource={RelativeSource AncestorType=Window}}" Value="RightToLeft">
+                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                <Setter Property="BorderThickness" Value="1,0,0,0"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
                 <Border.RenderTransform>
                     <TranslateTransform x:Name="DrawerT" X="-260"/>
                 </Border.RenderTransform>
@@ -3267,8 +3318,8 @@
         </Grid>
         <Grid x:Name="DialogOverlay" Grid.RowSpan="2" Visibility="Collapsed" Panel.ZIndex="95">
             <Rectangle x:Name="DialogDim" Fill="#050D1D" Opacity="0" MouseLeftButtonUp="DialogDim_Up"/>
-            <Border x:Name="DialogCard" Width="308" VerticalAlignment="Center" HorizontalAlignment="Center"
-                    Background="#101F3D" BorderBrush="#2A3C64" BorderThickness="1" CornerRadius="16" Padding="24"
+            <Border x:Name="DialogCard" Width="272" VerticalAlignment="Center" HorizontalAlignment="Center"
+                    Background="#101F3D" BorderBrush="#2A3C64" BorderThickness="1" CornerRadius="16" Padding="20"
                     RenderTransformOrigin="0.5,0.5">
                 <Border.RenderTransform>
                     <ScaleTransform x:Name="DialogScale" ScaleX="0.9" ScaleY="0.9"/>
@@ -3277,19 +3328,19 @@
                     <DropShadowEffect Color="Black" BlurRadius="34" ShadowDepth="10" Opacity="0.55"/>
                 </Border.Effect>
                 <StackPanel>
-                    <Border x:Name="DialogIconTile" Width="44" Height="44" CornerRadius="12" Background="#16264A" HorizontalAlignment="Left" Margin="0,0,0,16">
+                    <Border x:Name="DialogIconTile" Width="38" Height="38" CornerRadius="11" Background="#16264A" HorizontalAlignment="Left" Margin="0,0,0,12">
                         <Path x:Name="DialogIcon" Data="M21 2v6h-6 M3 12a9 9 0 0 1 15-6.7L21 8 M3 22v-6h6 M21 12a9 9 0 0 1-15 6.7L3 16"
                               Stroke="#6E9CF0" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
-                              Fill="Transparent" Width="22" Height="22" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                              Fill="Transparent" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
-                    <TextBlock x:Name="DialogTitle" Text="GRoute" Foreground="White" FontSize="16" FontWeight="Bold"
-                               FontFamily="pack://application:,,,/GRoute;component/Fonts/#Lexend Bold, Segoe UI" Margin="0,0,0,7"/>
-                    <TextBlock x:Name="DialogText" Foreground="#A9B8D4" FontSize="13" TextWrapping="Wrap" LineHeight="20"
-                               FontFamily="pack://application:,,,/GRoute;component/Fonts/#Lexend, Segoe UI" Margin="0,0,0,22"/>
+                    <TextBlock x:Name="DialogTitle" Text="GRoute" Foreground="White" FontSize="15" FontWeight="Bold"
+                               FontFamily="pack://application:,,,/GRoute;component/Fonts/#Lexend Bold, Segoe UI" Margin="0,0,0,5"/>
+                    <TextBlock x:Name="DialogText" Foreground="#A9B8D4" FontSize="12.5" TextWrapping="Wrap" LineHeight="18"
+                               FontFamily="pack://application:,,,/GRoute;component/Fonts/#Lexend, Segoe UI" Margin="0,0,0,18"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button x:Name="DialogCancelBtn" Style="{StaticResource ToolGhost}" Content="{DynamicResource Str.cancel}"
-                                Padding="16,8" Margin="0,0,9,0" FontSize="13" Click="Dialog_Cancel" Visibility="Collapsed"/>
-                        <Button x:Name="DialogOkBtn" Style="{StaticResource ToolPrimary}" Content="OK" Padding="24,8" FontSize="13" Click="Dialog_Ok"/>
+                                Padding="14,7" Margin="0,0,9,0" FontSize="12.5" Click="Dialog_Cancel" Visibility="Collapsed"/>
+                        <Button x:Name="DialogOkBtn" Style="{StaticResource ToolPrimary}" Content="OK" Padding="22,7" FontSize="12.5" Click="Dialog_Ok"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
