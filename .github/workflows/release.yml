@@ -92,8 +92,8 @@ jobs:
           git fetch origin $env:RELEASE_BRANCH
           git checkout $env:RELEASE_BRANCH
           ($obj | ConvertTo-Json) | Out-File version.json -Encoding utf8
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name  "SuOracle"
+          git config user.email "heinrichdonald480@gmail.com"
           git add version.json
           if (git status --porcelain version.json) {
             git commit -m "Release ${{ steps.ver.outputs.version }}: update version.json"
