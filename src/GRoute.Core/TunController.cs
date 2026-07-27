@@ -60,8 +60,11 @@ public sealed class TunController
             return false;
         }
 
-        _gateway = GetDefaultGateway();
-        FindGateway6();
+        await Task.Run(() =>
+        {
+            _gateway = GetDefaultGateway();
+            FindGateway6();
+        });
         if (_gateway is null)
         {
             Log?.Invoke("Couldn't determine the default gateway.");
@@ -69,7 +72,7 @@ public sealed class TunController
         }
         Log?.Invoke($"Server {_serverIp} will bypass the tunnel via {_gateway}.");
 
-        StartTun2socks();
+        await Task.Run(StartTun2socks);
 
         if (!await WaitForAdapter(6000))
         {
@@ -80,11 +83,16 @@ public sealed class TunController
             return false;
         }
 
-        ConfigureAdapter();
-        AddRoutes();
+        await Task.Run(() =>
+        {
+            ConfigureAdapter();
+            AddRoutes();
+        });
         Log?.Invoke("TUN mode active — all traffic routed through the tunnel.");
         return true;
     }
+
+    public Task StopAsync() => Task.Run(Stop);
 
     public void Stop()
     {

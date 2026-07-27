@@ -341,6 +341,7 @@ public static class Strings
         ["add_and_fetch"] = "Add and fetch",
         ["unit_ms"] = "ms",
         ["ping_fail"] = "Fail",
+        ["logs_clear"] = "Clear",
     };
 
     private static readonly Dictionary<string, string> Fa = new()
@@ -667,6 +668,7 @@ public static class Strings
         ["add_and_fetch"] = "افزودن و دریافت",
         ["unit_ms"] = "میلی‌ثانیه",
         ["ping_fail"] = "ناموفق",
+        ["logs_clear"] = "پاک کردن",
     };
 
     private static readonly Dictionary<string, string> Ru = new()
@@ -989,6 +991,7 @@ public static class Strings
         ["add_and_fetch"] = "Добавить и загрузить",
         ["unit_ms"] = "мс",
         ["ping_fail"] = "Ошибка",
+        ["logs_clear"] = "Очистить",
     };
 
     private static readonly Dictionary<string, string> Zh = new()
@@ -1311,6 +1314,7 @@ public static class Strings
         ["add_and_fetch"] = "添加并获取",
         ["unit_ms"] = "毫秒",
         ["ping_fail"] = "失败",
+        ["logs_clear"] = "清除",
     };
 
     public static bool IsRtl(Lang lang) => lang == Lang.Fa;

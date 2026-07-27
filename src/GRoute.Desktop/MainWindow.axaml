@@ -2162,7 +2162,16 @@
 
                 <Border Name="LogsPanel" Classes="card" CornerRadius="12" Padding="3" Margin="0"
                         IsVisible="False" VerticalAlignment="Stretch">
-                        <Border Background="#66050D1D" CornerRadius="10" Padding="12,10,4,10">
+                    <Grid RowDefinitions="Auto,*">
+                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" Margin="6,2,4,8">
+                            <Button Grid.Column="1" Classes="live" Click="CopyLogs_Click" Height="30"
+                                    CornerRadius="9" Padding="12,0" FontSize="12" Margin="0,0,6,0"
+                                    Content="{DynamicResource Str.copy}"/>
+                            <Button Grid.Column="2" Classes="live" Click="ClearLogs_Click" Height="30"
+                                    CornerRadius="9" Padding="12,0" FontSize="12"
+                                    Content="{DynamicResource Str.logs_clear}"/>
+                        </Grid>
+                        <Border Grid.Row="1" Background="#66050D1D" CornerRadius="10" Padding="12,10,4,10">
                             <ScrollViewer Name="LogScroll" VerticalAlignment="Stretch">
                             <Panel>
                                 <StackPanel Name="LogPlaceholder" VerticalAlignment="Center"
@@ -2173,11 +2182,13 @@
                                     <TextBlock Text="{DynamicResource Str.logs_empty}" Classes="muted" FontSize="12"
                                                HorizontalAlignment="Center"/>
                                 </StackPanel>
-                                <TextBlock Name="LogText" FontFamily="{StaticResource MonoFont}" FontSize="11.5"
-                                           Foreground="#B9C6E2" TextWrapping="Wrap"/>
+                                <SelectableTextBlock Name="LogText" FontFamily="{StaticResource MonoFont}"
+                                           FontSize="11.5" Foreground="#B9C6E2" TextWrapping="Wrap"
+                                           SelectionBrush="#3D6AD6" SelectionForegroundBrush="White"/>
                             </Panel>
                             </ScrollViewer>
                         </Border>
+                    </Grid>
                 </Border>
 
                 <ScrollViewer Name="PrefsPanel" IsVisible="False">

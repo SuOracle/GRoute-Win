@@ -102,6 +102,7 @@ public partial class MainWindow : Window
         "export_lock", "export_lock_note", "startup_title", "startup_hint",
         "tor_title", "tor_hint", "dns_title", "dns_hint",
         "adblock_title", "about_version", "kill_admin_prompt", "manual_configs", "title_admin", "warp_blocked",
+        "logs_clear",
         "unit_ms", "ping_fail",
         "advanced", "add_and_fetch", "proj_aether_desc", "proj_warp_desc", "cf_stopped", "legacy_warp",
         "fragment_sub", "split_sub", "sniffing_sub", "adblock_sub", "usage_vpn", "sub_url",
@@ -4195,16 +4196,24 @@ public partial class MainWindow : Window
 
     private void UnmirrorVisuals()
     {
-        foreach (var v in this.GetVisualDescendants())
+        if (!Strings.IsRtl(_lang)) return;
+        try
         {
-            if (v is not Control ctl) continue;
-            var t = ctl.GetType();
-            bool keep = false;
-            foreach (var n in NeverMirrored)
+            foreach (var v in this.GetVisualDescendants().ToList())
             {
-                if (n.IsAssignableFrom(t)) { keep = true; break; }
+                if (v is not Control ctl) continue;
+                var t = ctl.GetType();
+                foreach (var n in NeverMirrored)
+                {
+                    if (!n.IsAssignableFrom(t)) continue;
+                    ctl.FlowDirection = FlowDirection.LeftToRight;
+                    break;
+                }
             }
-            if (keep) ctl.FlowDirection = FlowDirection.LeftToRight;
+        }
+        catch (Exception ex)
+        {
+            Append("Layout: " + ex.Message);
         }
     }
 
@@ -6461,6 +6470,32 @@ public partial class MainWindow : Window
         if (_tab is "connect" or "prefs") QueueWindowHeight();
     }
 
+    private async void CopyLogs_Click(object? sender, RoutedEventArgs e)
+    {
+        string text = LogText?.SelectedText is { Length: > 0 } sel ? sel : _log.ToString();
+        if (text.Length == 0) return;
+        var cb = Clipboard;
+        if (cb is null) return;
+        try
+        {
+            await cb.SetTextAsync(text);
+            Append(LogText?.SelectedText is { Length: > 0 }
+                ? "Selection copied."
+                : "Log copied.");
+        }
+        catch (Exception ex)
+        {
+            Append("Copy failed: " + ex.Message);
+        }
+    }
+
+    private void ClearLogs_Click(object? sender, RoutedEventArgs e)
+    {
+        _log.Clear();
+        if (LogText is not null) LogText.Text = "";
+        SetVis(LogPlaceholder, true);
+    }
+
     private void OnLog(string line) => Dispatcher.UIThread.Post(() => Append(line));
 
     private void Append(string line)
@@ -7286,7 +7321,13 @@ public partial class MainWindow : Window
             if (delayMs > 0) await Task.Delay(delayMs, token);
 
             var loc = await IpLocator.FetchAsync(throughProxy, token);
-            if (loc is null || token.IsCancellationRequested || gen != _locGen) return;
+            if (loc is null)
+            {
+                if (!token.IsCancellationRequested && gen == _locGen && IpLocator.LastError is { Length: > 0 })
+                    Append("Location lookup failed: " + IpLocator.LastError);
+                return;
+            }
+            if (token.IsCancellationRequested || gen != _locGen) return;
 
             Dispatcher.UIThread.Post(() =>
                 {
@@ -7299,8 +7340,12 @@ public partial class MainWindow : Window
                     _ipPopupReady = true;
                 });
         }
-        catch
+        catch (OperationCanceledException)
         {
+        }
+        catch (Exception ex)
+        {
+            Append("Location lookup failed: " + ex.GetBaseException().Message);
         }
         finally
         {
@@ -7335,6 +7380,7 @@ public partial class MainWindow : Window
             _ = StartTunAsync();
             return;
         }
+        Append($"Routing mode: {mode}");
         if (mode != "system") return;
         EnableSystemProxy();
     }
@@ -7367,15 +7413,33 @@ public partial class MainWindow : Window
     {
         if (_tun is not null) return;
 
+        Append($"TUN: mode={_store.Mode}"
+               + $", admin={Platform.Elevation.IsAdministrator()}"
+               + $", platform={(Platform.CreateTun is null ? "no" : "yes")}");
+
+        // apps honour the system proxy before the routing table, so a stale
+        // setting would keep traffic out of the tunnel entirely
+        try
+        {
+            Platform.Proxy.Disable();
+            _proxyOn = false;
+            Append("TUN: cleared the system proxy so traffic uses the adapter.");
+        }
+        catch (Exception ex)
+        {
+            Append("TUN: could not clear the system proxy \u2014 " + ex.Message);
+        }
+
         if (Platform.CreateTun is null)
         {
-            Append("TUN mode isn't available on this platform.");
+            TunFellBack("TUN mode isn't available on this platform.");
             return;
         }
         if (!Platform.Elevation.IsAdministrator())
         {
-            Append("TUN mode needs administrator rights. Restart GRoute as administrator.");
-            EnableSystemProxy();
+            TunFellBack("TUN needs administrator rights \u2014 GRoute is not elevated, "
+                        + "so traffic is going through the system proxy instead. "
+                        + "Restart GRoute as administrator.");
             return;
         }
         if (_store.Selected() is not ProxyConfig cfg)
@@ -7386,11 +7450,12 @@ public partial class MainWindow : Window
 
         var svc = Platform.CreateTun();
         svc.Log += line => Dispatcher.UIThread.Post(() => Append(line));
+        Append($"TUN: binaries={(svc.BinariesPresent ? "present" : "MISSING")}");
 
         if (!svc.BinariesPresent)
         {
-            Append($"TUN needs this file (not found): {svc.MissingBinary()}");
-            EnableSystemProxy();
+            TunFellBack($"TUN needs this file, which is missing:\n\n{svc.MissingBinary()}\n\n"
+                        + "Using the system proxy instead.");
             return;
         }
 
@@ -7409,13 +7474,50 @@ public partial class MainWindow : Window
         if (ok)
         {
             Append("TUN adapter up \u2014 all traffic routed through the tunnel.");
+            LogTunState();
             return;
         }
 
         _tun = null;
         try { svc.Stop(); } catch { }
-        Append("TUN failed to start; using system proxy instead.");
+        TunFellBack("TUN adapter failed to start \u2014 using the system proxy instead. "
+                    + "See the log for the tun2socks output.");
+    }
+
+    private void LogTunState()
+    {
+        try
+        {
+            var nics = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces();
+            var tun = nics.FirstOrDefault(n =>
+                n.Name.Contains("GRoute", StringComparison.OrdinalIgnoreCase));
+            if (tun is null)
+            {
+                Append("TUN: no GRoute adapter found \u2014 tun2socks did not create it.");
+                return;
+            }
+            var ips = tun.GetIPProperties();
+            string addr = string.Join(", ",
+                ips.UnicastAddresses.Select(a => a.Address.ToString()));
+            Append($"TUN: adapter '{tun.Name}' {tun.OperationalStatus}, address {addr}");
+            if (ips.GatewayAddresses.Count == 0)
+                Append("TUN: adapter has no gateway \u2014 traffic will not route through it.");
+        }
+        catch (Exception ex)
+        {
+            Append("TUN: could not read the adapter \u2014 " + ex.Message);
+        }
+    }
+
+    private void TunFellBack(string why)
+    {
+        Append(why);
         EnableSystemProxy();
+        Dispatcher.UIThread.Post(() =>
+        {
+            ShowConnectError(why);
+            _ = Ask("warning", Strings.Get(_lang, "title_warning"), why);
+        });
     }
 
     private void StopTun()
@@ -7423,8 +7525,11 @@ public partial class MainWindow : Window
         var svc = _tun;
         _tun = null;
         if (svc is null) return;
-        try { svc.Stop(); } catch { }
-        Append("TUN adapter down.");
+        _ = Task.Run(() =>
+        {
+            try { svc.Stop(); } catch { }
+            Dispatcher.UIThread.Post(() => Append("TUN adapter down."));
+        });
     }
 
     private void OnState(ConnectionState state)

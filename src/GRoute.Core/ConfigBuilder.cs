@@ -173,11 +173,29 @@ public static class ConfigBuilder
                 }
             });
         }
-        if (adBlock)
-            outbounds.Add(new JsonObject { ["tag"] = "block", ["protocol"] = "blackhole" });
+        // always present: the local-noise rules below need somewhere to send traffic
+        outbounds.Add(new JsonObject { ["tag"] = "block", ["protocol"] = "blackhole" });
         root["outbounds"] = outbounds;
 
         var rules = new JsonArray();
+
+        // local-network noise: NetBIOS, mDNS, SSDP, WS-Discovery, LLMNR.
+        // in TUN mode the adapter captures these broadcasts and they would
+        // otherwise flood the tunnel for no benefit.
+        rules.Add(new JsonObject
+        {
+            ["type"] = "field",
+            ["network"] = "udp",
+            ["port"] = "137-139,1900,3702,5353,5355",
+            ["outboundTag"] = "block"
+        });
+        rules.Add(new JsonObject
+        {
+            ["type"] = "field",
+            ["ip"] = new JsonArray("169.254.0.0/16", "224.0.0.0/4",
+                                   "255.255.255.255/32", "ff00::/8"),
+            ["outboundTag"] = "block"
+        });
         if (dialer)
         {
             rules.Add(new JsonObject
