@@ -1,0 +1,23 @@
+device_id = "41ec37cb-c37f-450d-85d2-984e8e7de6ee"
+access_token = "b6bea69c-a914-4f87-94fa-c44ebd50da52"
+cert_pem = """
+-----BEGIN CERTIFICATE-----
+MIHsMIGToAMCAQICAQAwCgYIKoZIzj0EAwIwADAeFw0yNjA3MTkxNDM2NDFaFw0y
+NjA3MjAxNDM2NDFaMAAwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAQDLpBQJO3E
+J03SPmtb6Uu7/PuHzF4bUzCcEXsiKcDKZsh3r9ndJTOK1tvdlpEwjZuTtx2xlvXM
+q1FWrFUmIqAnMAoGCCqGSM49BAMCA0gAMEUCIFcwMGMaaNILiUPHeI40fNwEMEKe
+/k8uBFp9rDH6kwbcAiEA4J/dTJTrpze46kEpGcPAj9kM9KHxnAxr64c8oM0mD2o=
+-----END CERTIFICATE-----
+"""
+key_pem = """
+-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgUAvUtlByg5gZeUlp
+sLLjqKAPTbMINr8Ht6ZXUrvQEx+hRANCAAQDLpBQJO3EJ03SPmtb6Uu7/PuHzF4b
+UzCcEXsiKcDKZsh3r9ndJTOK1tvdlpEwjZuTtx2xlvXMq1FWrFUmIqAn
+-----END PRIVATE KEY-----
+"""
+ipv4 = "172.16.0.2"
+ipv6 = "2606:4700:110:81b9:87e8:762b:87f2:4c24"
+wg_private_key = "cPVF5zvEXIieB6fDQf0gkHdMn13bYXDI4vmJB7BqOkg="
+wg_peer_public_key = "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo="
+client_id = "Zbot"

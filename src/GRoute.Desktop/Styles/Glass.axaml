@@ -1,0 +1,232 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Styles.Resources>
+        <LinearGradientBrush x:Key="GlassFill" StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#F51D3457" Offset="0"/>
+            <GradientStop Color="#F8192C4B" Offset="0.45"/>
+            <GradientStop Color="#FA15243D" Offset="1"/>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="GlassRowHover" StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#F5182D52" Offset="0"/>
+            <GradientStop Color="#F8132444" Offset="1"/>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="GlassHeaderHover" StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#F8264476" Offset="0"/>
+            <GradientStop Color="#FA203A66" Offset="0.45"/>
+            <GradientStop Color="#FC1B3155" Offset="1"/>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="GlassFillSoft" StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#F2101F3A" Offset="0"/>
+            <GradientStop Color="#F60D1930" Offset="0.5"/>
+            <GradientStop Color="#F90A1426" Offset="1"/>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="GlassFillDeep" StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#E6102142" Offset="0"/>
+            <GradientStop Color="#EC091329" Offset="1"/>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="GlassEdge" StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#5C6E9CF0" Offset="0"/>
+            <GradientStop Color="#2E6E9CF0" Offset="0.5"/>
+            <GradientStop Color="#1C6E9CF0" Offset="1"/>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="GlassEdgeSoft" StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#2E7FA0D8" Offset="0"/>
+            <GradientStop Color="#127FA0D8" Offset="0.6"/>
+            <GradientStop Color="#0A7FA0D8" Offset="1"/>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="GlassSheen" StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#2EFFFFFF" Offset="0"/>
+            <GradientStop Color="#00FFFFFF" Offset="1"/>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="GlassAccentFill" StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#803D6AD6" Offset="0"/>
+            <GradientStop Color="#4D294A7E" Offset="1"/>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="GlassAccentEdge" StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#996E9CF0" Offset="0"/>
+            <GradientStop Color="#333D6AD6" Offset="1"/>
+        </LinearGradientBrush>
+    </Styles.Resources>
+
+    <Style Selector="Border.glassCard">
+        <Setter Property="Background" Value="{StaticResource GlassFillSoft}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource GlassEdgeSoft}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="14"/>
+        <Setter Property="Padding" Value="16"/>
+        <Setter Property="Margin" Value="0,0,0,14"/>
+        <Setter Property="BoxShadow" Value="0 10 30 -10 #6B000814"/>
+    </Style>
+
+    <Style Selector="Border.glassRow">
+        <Setter Property="Background" Value="{StaticResource GlassFillSoft}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource GlassEdgeSoft}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="BoxShadow" Value="0 6 18 -8 #59000814"/>
+        <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+        <Setter Property="RenderTransform" Value="scale(1,1)"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.16"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.glassRow:pointerover">
+        <Setter Property="Background" Value="{StaticResource GlassRowHover}"/>
+    </Style>
+
+    <Style Selector="Border.glassHeader">
+        <Setter Property="Background" Value="{StaticResource GlassFill}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource GlassEdge}"/>
+        <Setter Property="BorderThickness" Value="1.5"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="BoxShadow" Value="0 8 22 -10 #66000814"/>
+        <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+        <Setter Property="RenderTransform" Value="scale(1,1)"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.18"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.glassHeader:pointerover">
+        <Setter Property="Background" Value="{StaticResource GlassHeaderHover}"/>
+    </Style>
+
+    <Style Selector="Border.glassSheet">
+        <Setter Property="Background" Value="{StaticResource GlassFillDeep}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource GlassEdge}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BoxShadow" Value="0 18 48 -12 #8C000814"/>
+    </Style>
+
+    <Style Selector="Border.glassChip">
+        <Setter Property="Background" Value="{StaticResource GlassFillSoft}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource GlassEdgeSoft}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="BoxShadow" Value="0 4 14 -6 #4D000814"/>
+    </Style>
+
+    <Style Selector="Border.glassInset">
+        <Setter Property="Background" Value="#59060F26"/>
+        <Setter Property="BorderBrush" Value="#26FFFFFF"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="10"/>
+    </Style>
+
+    <Style Selector="Button.glass">
+        <Setter Property="Foreground" Value="#EAF2FF"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Padding" Value="16,9"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="RenderTransform" Value="scale(1,1)"/>
+        <Setter Property="Background" Value="{StaticResource GlassFill}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource GlassEdge}"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.16" Easing="CubicEaseOut"/>
+                <BrushTransition Property="Background" Duration="0:0:0.18"/>
+            </Transitions>
+        </Setter>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        BoxShadow="0 8 24 -8 #66000814">
+                    <Panel>
+                        <Border CornerRadius="{TemplateBinding CornerRadius}" Margin="1,1,1,0"
+                                VerticalAlignment="Top" Height="16" IsHitTestVisible="False"
+                                Background="{StaticResource GlassSheen}"/>
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          Padding="{TemplateBinding Padding}"
+                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                    </Panel>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <Style Selector="Button.glass:pointerover">
+        <Setter Property="RenderTransform" Value="scale(1.02,1.02)"/>
+        <Setter Property="Background" Value="{StaticResource GlassFillSoft}"/>
+    </Style>
+
+    <Style Selector="Button.glass:pressed">
+        <Setter Property="RenderTransform" Value="scale(0.97,0.97)"/>
+    </Style>
+
+    <Style Selector="Button.glass.accent">
+        <Setter Property="Background" Value="{StaticResource GlassAccentFill}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource GlassAccentEdge}"/>
+    </Style>
+
+    <Style Selector="Button.glassbtn">
+        <Setter Property="MinWidth" Value="0"/>
+        <Setter Property="MinHeight" Value="0"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Foreground" Value="#B9C6E2"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="RenderTransform" Value="scale(1,1)"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.14" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+        <Setter Property="Template">
+            <ControlTemplate TargetType="Button">
+                <Border Name="PART_Glass" Classes="glassChip"
+                        Padding="{TemplateBinding Padding}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Margin="0">
+                    <ContentPresenter Name="PART_ContentPresenter"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"/>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="Button.glassbtn /template/ Border#PART_Glass">
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.16"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.glassbtn:pointerover /template/ Border#PART_Glass">
+        <Setter Property="Background" Value="{StaticResource GlassFill}"/>
+    </Style>
+    <Style Selector="Button.glassbtn:pressed">
+        <Setter Property="RenderTransform" Value="scale(0.95,0.95)"/>
+    </Style>
+    <Style Selector="Button.glassbtn:pressed /template/ Border#PART_Glass">
+        <Setter Property="Background" Value="{StaticResource GlassFillDeep}"/>
+    </Style>
+
+</Styles>

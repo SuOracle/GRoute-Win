@@ -1,0 +1,117 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Styles.Resources>
+        <SolidColorBrush x:Key="CardBg" Color="#0E1A38"/>
+        <SolidColorBrush x:Key="CardBorder" Color="#22345B"/>
+        <SolidColorBrush x:Key="CardBorderStrong" Color="#35548C"/>
+        <SolidColorBrush x:Key="StripBg" Color="#1B2F58"/>
+        <SolidColorBrush x:Key="Accent" Color="#3D6AD6"/>
+        <SolidColorBrush x:Key="AccentSoft" Color="#6E9CF0"/>
+        <SolidColorBrush x:Key="TextPrimary" Color="#E3EBFA"/>
+        <SolidColorBrush x:Key="TextMuted" Color="#9FB3D6"/>
+        <SolidColorBrush x:Key="TextDim" Color="#6E7E9E"/>
+        <SolidColorBrush x:Key="HoverTint" Color="#1A2743"/>
+        <SolidColorBrush x:Key="Danger" Color="#E57373"/>
+        <SolidColorBrush x:Key="Warning" Color="#F5C842"/>
+        <FontFamily x:Key="UiFont">avares://GRoute/Assets/Fonts#Lexend, Segoe UI</FontFamily>
+        <FontFamily x:Key="MonoFont">Consolas, Menlo, monospace</FontFamily>
+    </Styles.Resources>
+
+    <Style Selector="Window">
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}"/>
+    </Style>
+
+    <Style Selector="Button.live">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="Padding" Value="12,7"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="RenderTransform" Value="scale(1,1)"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12"/>
+                <BrushTransition Property="Background" Duration="0:0:0.15"/>
+            </Transitions>
+        </Setter>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="Bd" Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="12" ClipToBounds="True">
+                    <ContentPresenter Name="PART_ContentPresenter"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      Padding="{TemplateBinding Padding}"
+                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="Button.live:pointerover /template/ Border#Bd">
+        <Setter Property="Background" Value="{StaticResource HoverTint}"/>
+    </Style>
+    <Style Selector="Button.live:pressed">
+        <Setter Property="RenderTransform" Value="scale(0.95,0.95)"/>
+    </Style>
+
+    <Style Selector="Button.primary">
+        <Setter Property="Background" Value="{StaticResource Accent}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style Selector="Button.primary:pointerover /template/ Border#Bd">
+        <Setter Property="Background" Value="#4C79E4"/>
+    </Style>
+
+    <Style Selector="Button.ghost">
+        <Setter Property="Background" Value="{StaticResource CardBg}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource CardBorder}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Foreground" Value="#CFE0F5"/>
+    </Style>
+
+    <Style Selector="Button.icon">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Padding" Value="6"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.nav">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="Padding" Value="12,9"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="FontSize" Value="13.5"/>
+    </Style>
+    <Style Selector="Button.nav:pointerover /template/ Border#Bd">
+        <Setter Property="Background" Value="{StaticResource HoverTint}"/>
+    </Style>
+    <Style Selector="Button.nav.selected /template/ Border#Bd">
+        <Setter Property="Background" Value="#1E3358"/>
+    </Style>
+
+    <Style Selector="Border.card">
+        <Setter Property="Background" Value="{StaticResource CardBg}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource CardBorder}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="14"/>
+        <Setter Property="Padding" Value="16"/>
+        <Setter Property="Margin" Value="0,0,0,14"/>
+    </Style>
+
+    <Style Selector="TextBlock.h1">
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="#CAE2FD"/>
+    </Style>
+    <Style Selector="TextBlock.muted">
+        <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+</Styles>

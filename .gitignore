@@ -1,13 +1,58 @@
+# ---- build output ----
 bin/
 obj/
+dist/
 publish/
-[Bb]in/
-[Oo]bj/
-
-.vs/
 *.user
 *.suo
+*.userprefs
+*.cache
 
-Output/
-*.exe
+# ---- Visual Studio / Rider / VS Code ----
+.vs/
+.vscode/
 .idea/
+*.sln.docstates
+*.DotSettings.user
+
+# ---- engine binaries and data (see libs/README.md) ----
+# these are third-party downloads, not our source. keep the repo small and
+# let users fetch them from the upstream projects.
+libs/*.exe
+libs/*.dll
+libs/*.dat
+libs/geoip
+libs/geoip6
+libs/pluggable_transports/
+!libs/README.md
+
+# ---- installer output ----
+*.msi
+*.appx
+*.appxbundle
+Output/
+setup/
+
+# ---- secrets and per-machine config ----
+*.pfx
+*.snk
+*.p12
+signing.properties
+secrets.json
+appsettings.Local.json
+
+# ---- runtime artefacts ----
+crash.txt
+*.log
+groute-config.json
+groute-singbox.json
+
+# ---- packaging ----
+*.nupkg
+packages/
+.nuget/
+
+# ---- OS noise ----
+.DS_Store
+Thumbs.db
+desktop.ini

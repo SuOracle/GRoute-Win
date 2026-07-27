@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <AssemblyName>GRoute</AssemblyName>
+    <RootNamespace>GRoute.Desktop</RootNamespace>
+    <ApplicationVersion>2</ApplicationVersion>
+    <Version>2.0.0</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
+    <InformationalVersion>2.0.0</InformationalVersion>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <PublishTrimmed>false</PublishTrimmed>
+    <DebugType>none</DebugType>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <!-- exe icon: taskbar, Explorer, Alt-Tab, and Add/Remove Programs -->
+  <PropertyGroup Condition="Exists('Assets\GRoute.ico')">
+    <ApplicationIcon>Assets\GRoute.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition="!Exists('Assets\GRoute.ico') And Exists('Assets\icon.ico')">
+    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition="!Exists('Assets\GRoute.ico') And !Exists('Assets\icon.ico') And Exists('Assets\app.ico')">
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <Target Name="WarnNoIcon" BeforeTargets="Build" Condition="'$(ApplicationIcon)' == ''">
+    <Warning Text="No .ico in Assets\ - GRoute.exe and the installer will use default icons. Add Assets\GRoute.ico." />
+  </Target>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GRoute.Core\GRoute.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.18" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.18" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.18" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.3.18" Condition="'$(Configuration)' == 'Debug'" />
+    <PackageReference Include="FluentAvaloniaUI" Version="2.5.1" />
+  </ItemGroup>
+
+  <!-- engine binaries and data files: copied on build AND on publish -->
+  <ItemGroup>
+    <Content Include="libs\**" Exclude="libs\**\*.pdb"
+             Condition="Exists('libs')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Link>libs\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Content>
+  </ItemGroup>
+
+  <Target Name="WarnMissingLibs" AfterTargets="Publish">
+    <ItemGroup>
+      <_Shipped Include="$(PublishDir)libs\**" />
+    </ItemGroup>
+    <Warning Condition="'@(_Shipped)' == ''"
+             Text="No files were published to libs\. xray.exe, tor.exe and geoip will be missing at runtime." />
+    <Message Importance="high" Condition="'@(_Shipped)' != ''"
+             Text="published @(_Shipped->Count()) files to libs\" />
+  </Target>
+</Project>
