@@ -2,11 +2,8 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
-using GRoute.Windows.Core;
 
 namespace GRoute.Windows;
 
@@ -17,55 +14,60 @@ public static class IpLocator
     public static IpLocation Fallback { get; } =
         new IpLocation("\u2014", "Tehran", "Iran", "IR", 35.6892, 51.3890);
 
-    public static async Task<IpLocation?> FetchAsync(bool throughProxy, CancellationToken ct = default)
+    public static string? LastError { get; private set; }
+
+    public static async Task<IpLocation?> FetchAsync(bool throughProxy,
+                                                    System.Threading.CancellationToken ct = default)
     {
+        LastError = null;
         try
         {
-            using var handler = new HttpClientHandler { UseCookies = false };
+            using var handler = new HttpClientHandler();
             if (throughProxy)
             {
-                handler.Proxy = new WebProxy($"http://127.0.0.1:{ConfigBuilder.HttpPort}");
+                handler.Proxy = new WebProxy($"http://127.0.0.1:{GRoute.Windows.Core.ConfigBuilder.HttpPort}");
                 handler.UseProxy = true;
+                handler.UseCookies = false;
             }
             else
             {
-                handler.Proxy = null;
                 handler.UseProxy = false;
             }
-
             using var http = new HttpClient(handler)
             {
                 Timeout = TimeSpan.FromSeconds(throughProxy ? 25 : 8)
             };
             http.DefaultRequestHeaders.Add("User-Agent", "GRoute");
-            http.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue
-            {
-                NoCache = true,
-                NoStore = true
-            };
-            http.DefaultRequestHeaders.Add("Pragma", "no-cache");
-
-            string? ip = await FetchIpAsync(http, "https://api4.ipify.org", ct)
-                      ?? await FetchIpAsync(http, "https://api6.ipify.org", ct);
+            http.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
 
             ct.ThrowIfCancellationRequested();
 
-            return await TryIpWho(http, ip, ct)
-                ?? await TryIpApi(http, ip, ct)
-                ?? await TryIpApiCo(http, ip, ct);
+            string? ip = await FetchIpAsync(http, "https://api4.ipify.org")
+                      ?? await FetchIpAsync(http, "https://api6.ipify.org")
+                      ?? await FetchIpAsync(http, "https://icanhazip.com");
+
+            var loc = await TryIpWho(http, ip)
+                   ?? await TryIpApi(http, ip)
+                   ?? await TryIpApiCo(http, ip);
+
+            if (loc is null)
+                LastError = ip is null
+                    ? "no reply from the IP lookup services"
+                    : $"got IP {ip} but no location service answered";
+            return loc;
         }
-        catch
+        catch (Exception ex)
         {
+            LastError = ex.GetBaseException().Message;
             return null;
         }
     }
 
-    private static async Task<IpLocation?> TryIpWho(HttpClient http, string? ip, CancellationToken ct)
+    private static async Task<IpLocation?> TryIpWho(HttpClient http, string? ip)
     {
         try
         {
-            string body = await http.GetStringAsync(
-                ip != null ? "https://ipwho.is/" + ip : "https://ipwho.is/", ct);
+            string body = await http.GetStringAsync(ip != null ? "https://ipwho.is/" + ip : "https://ipwho.is/");
             using var doc = JsonDocument.Parse(body);
             var r = doc.RootElement;
             if (r.TryGetProperty("success", out var s) && s.ValueKind == JsonValueKind.False) return null;
@@ -77,12 +79,12 @@ public static class IpLocator
         catch { return null; }
     }
 
-    private static async Task<IpLocation?> TryIpApi(HttpClient http, string? ip, CancellationToken ct)
+    private static async Task<IpLocation?> TryIpApi(HttpClient http, string? ip)
     {
         try
         {
             string url = "http://ip-api.com/json/" + (ip ?? "") + "?fields=status,country,countryCode,city,lat,lon,query";
-            string body = await http.GetStringAsync(url, ct);
+            string body = await http.GetStringAsync(url);
             using var doc = JsonDocument.Parse(body);
             var r = doc.RootElement;
             if (Str(r, "status", "") != "success") return null;
@@ -94,12 +96,12 @@ public static class IpLocator
         catch { return null; }
     }
 
-    private static async Task<IpLocation?> TryIpApiCo(HttpClient http, string? ip, CancellationToken ct)
+    private static async Task<IpLocation?> TryIpApiCo(HttpClient http, string? ip)
     {
         try
         {
             string url = ip != null ? "https://ipapi.co/" + ip + "/json/" : "https://ipapi.co/json/";
-            string body = await http.GetStringAsync(url, ct);
+            string body = await http.GetStringAsync(url);
             using var doc = JsonDocument.Parse(body);
             var r = doc.RootElement;
             if (r.TryGetProperty("error", out var er) && er.ValueKind == JsonValueKind.True) return null;
@@ -111,11 +113,11 @@ public static class IpLocator
         catch { return null; }
     }
 
-    private static async Task<string?> FetchIpAsync(HttpClient http, string url, CancellationToken ct)
+    private static async Task<string?> FetchIpAsync(HttpClient http, string url)
     {
         try
         {
-            string s = (await http.GetStringAsync(url, ct)).Trim();
+            string s = (await http.GetStringAsync(url)).Trim();
             if (s.Length > 0 && s.Length <= 45 && !s.Any(char.IsWhiteSpace) && (s.Contains('.') || s.Contains(':')))
                 return s;
             return null;
