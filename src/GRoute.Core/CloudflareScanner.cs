@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -66,8 +67,30 @@ public static class CloudflareScanner
             using var client = new TcpClient();
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             cts.CancelAfter(timeoutMs);
+
             var sw = Stopwatch.StartNew();
             await client.ConnectAsync(ip, port, cts.Token);
+
+            if (port == 443)
+            {
+                await using var ssl = new SslStream(client.GetStream(), false,
+                    static (_, _, _, _) => true);
+                await ssl.AuthenticateAsClientAsync(
+                    new SslClientAuthenticationOptions
+                    {
+                        TargetHost = "cloudflare.com",
+                        RemoteCertificateValidationCallback = static (_, _, _, _) => true
+                    }, cts.Token);
+            }
+            else
+            {
+                var probe = System.Text.Encoding.ASCII.GetBytes("HEAD / HTTP/1.1\r\nHost: cloudflare.com\r\n\r\n");
+                var stream = client.GetStream();
+                await stream.WriteAsync(probe, cts.Token);
+                var buf = new byte[1];
+                if (await stream.ReadAsync(buf, cts.Token) == 0) return -1;
+            }
+
             sw.Stop();
             return (int)sw.ElapsedMilliseconds;
         }

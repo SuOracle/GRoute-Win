@@ -25,7 +25,7 @@ public sealed class SingBoxController
 
     public SingBoxController()
     {
-        _singPath = Path.Combine(AppContext.BaseDirectory, "libs", "sing-box.exe");
+        _singPath = Bin.Path("sing-box");
     }
 
     public string BinaryPath => _singPath;
@@ -39,7 +39,7 @@ public sealed class SingBoxController
         if (IsRunning) return;
         if (!File.Exists(_singPath))
             throw new FileNotFoundException(
-                "sing-box.exe not found. Place it in the libs folder next to the app.", _singPath);
+                $"sing-box not found. Expected it here:\n\n{_singPath}", _singPath);
 
         KillStray();
         WaitPortFree(ConfigBuilder.SocksPort, 1500);

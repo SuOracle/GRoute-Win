@@ -342,6 +342,13 @@ public static class Strings
         ["unit_ms"] = "ms",
         ["ping_fail"] = "Fail",
         ["logs_clear"] = "Clear",
+        ["loc_unknown"] = "Location unavailable",
+        ["err_title"] = "Couldn't add",
+        ["err_parse"] = "That link isn't a server or subscription GRoute understands.",
+        ["err_timeout"] = "The server took too long to answer. Check your connection and try again.",
+        ["err_network"] = "Could not reach that address. It may be blocked or offline.",
+        ["err_empty_sub"] = "That subscription returned no usable servers.",
+        ["err_clipboard"] = "The clipboard has no server links or subscription address.",
     };
 
     private static readonly Dictionary<string, string> Fa = new()
@@ -669,6 +676,13 @@ public static class Strings
         ["unit_ms"] = "میلی‌ثانیه",
         ["ping_fail"] = "ناموفق",
         ["logs_clear"] = "پاک کردن",
+        ["loc_unknown"] = "موقعیت در دسترس نیست",
+        ["err_title"] = "افزودن نشد",
+        ["err_parse"] = "این لینک یک سرور یا اشتراک قابل‌شناسایی برای جی‌روت نیست.",
+        ["err_timeout"] = "سرور دیر پاسخ داد. اتصال خود را بررسی کنید و دوباره تلاش کنید.",
+        ["err_network"] = "دسترسی به این نشانی ممکن نشد. ممکن است مسدود یا خاموش باشد.",
+        ["err_empty_sub"] = "این اشتراک هیچ سرور قابل استفاده‌ای برنگرداند.",
+        ["err_clipboard"] = "کلیپ‌بورد هیچ لینک سرور یا نشانی اشتراکی ندارد.",
     };
 
     private static readonly Dictionary<string, string> Ru = new()
@@ -992,6 +1006,13 @@ public static class Strings
         ["unit_ms"] = "мс",
         ["ping_fail"] = "Ошибка",
         ["logs_clear"] = "Очистить",
+        ["loc_unknown"] = "Местоположение недоступно",
+        ["err_title"] = "Не удалось добавить",
+        ["err_parse"] = "Эта ссылка не является сервером или подпиской, понятной GRoute.",
+        ["err_timeout"] = "Сервер слишком долго не отвечал. Проверьте соединение и попробуйте снова.",
+        ["err_network"] = "Не удалось связаться с этим адресом. Возможно, он заблокирован или недоступен.",
+        ["err_empty_sub"] = "Эта подписка не вернула ни одного пригодного сервера.",
+        ["err_clipboard"] = "В буфере обмена нет ссылок на серверы или адреса подписки.",
     };
 
     private static readonly Dictionary<string, string> Zh = new()
@@ -1315,6 +1336,13 @@ public static class Strings
         ["unit_ms"] = "毫秒",
         ["ping_fail"] = "失败",
         ["logs_clear"] = "清除",
+        ["loc_unknown"] = "无法获取位置",
+        ["err_title"] = "添加失败",
+        ["err_parse"] = "GRoute 无法识别该链接为服务器或订阅。",
+        ["err_timeout"] = "服务器响应超时。请检查网络后重试。",
+        ["err_network"] = "无法访问该地址，可能被封锁或已下线。",
+        ["err_empty_sub"] = "该订阅未返回可用的服务器。",
+        ["err_clipboard"] = "剪贴板中没有服务器链接或订阅地址。",
     };
 
     public static bool IsRtl(Lang lang) => lang == Lang.Fa;

@@ -11,11 +11,11 @@ public static class KillSwitch
 
     private static readonly string[] AllowedBinaries =
     {
-        "xray.exe",
-        "sing-box.exe",
-        "aether.exe",
-        "tor.exe",
-        "tun2socks-windows-amd64.exe"
+        "xray",
+        "sing-box",
+        "aether",
+        "tor",
+        "tun2socks-windows-amd64"
     };
 
     public static bool Engaged { get; private set; }
@@ -23,12 +23,13 @@ public static class KillSwitch
     public static void Engage()
     {
         if (Engaged) return;
+        NetGuard.MarkDirty("killswitch");
         Clear();
 
         int i = 0;
         foreach (var name in AllowedBinaries)
         {
-            string path = Path.Combine(AppContext.BaseDirectory, "libs", name);
+            string path = Bin.Path(name);
             if (!File.Exists(path)) continue;
             RunNetsh($"advfirewall firewall add rule name=\"{RulePrefix} Allow {i}\" " +
                      $"dir=out action=allow enable=yes profile=any program=\"{path}\"");
@@ -57,6 +58,7 @@ public static class KillSwitch
         RunNetsh("advfirewall set allprofiles firewallpolicy blockinbound,allowoutbound");
         Clear();
         Engaged = false;
+        NetGuard.MarkClean("killswitch");
     }
 
     public static void ReleaseIfOrphaned()

@@ -12,15 +12,14 @@ namespace GRoute.Windows.Core;
 
 public static class DelayTester
 {
-    private static readonly string XrayPath =
-        Path.Combine(AppContext.BaseDirectory, "libs", "xray.exe");
+    private static readonly string XrayPath = Bin.Path("xray");
 
     private const string TestUrl = "https://www.gstatic.com/generate_204";
 
     public static bool XrayAvailable => File.Exists(XrayPath);
 
     private static readonly string SingBoxPath =
-        Path.Combine(AppContext.BaseDirectory, "libs", "sing-box.exe");
+        Bin.Path("sing-box");
 
     public static async Task<int> Measure(ProxyConfig config, int timeoutMs = 5000)
     {

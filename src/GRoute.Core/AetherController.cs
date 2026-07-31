@@ -25,7 +25,7 @@ public sealed class AetherController
 
     public AetherController()
     {
-        _path = Path.Combine(AppContext.BaseDirectory, "libs", "aether.exe");
+        _path = Bin.Path("aether");
     }
 
     public string BinaryPath => _path;
@@ -88,7 +88,7 @@ public sealed class AetherController
         if (IsRunning) return;
         if (!File.Exists(_path))
             throw new FileNotFoundException(
-                "aether.exe not found. Place it in the libs folder next to the app.", _path);
+                $"aether not found. Expected it here:\n\n{_path}", _path);
 
         KillStray();
         _stopping = false;
@@ -105,10 +105,16 @@ public sealed class AetherController
         string args = Args(config);
         LogReceived?.Invoke($"aether {args}");
 
+        var wrap = Platform.BypassSpawn?.Invoke(_path);
+        string spawnFile = wrap?.File ?? _path;
+        string spawnArgs = wrap is { Prefix.Length: > 0 }
+            ? string.Join(' ', wrap.Value.Prefix) + " " + args
+            : args;
+
         var psi = new ProcessStartInfo
         {
-            FileName = _path,
-            Arguments = args,
+            FileName = spawnFile,
+            Arguments = spawnArgs,
             WorkingDirectory = Path.GetDirectoryName(_path)!,
             UseShellExecute = false,
             CreateNoWindow = true,
@@ -122,8 +128,8 @@ public sealed class AetherController
         ApplyEnv(psi.Environment, config);
 
         _process = new Process { StartInfo = psi, EnableRaisingEvents = true };
-        _process.OutputDataReceived += (_, e) => { if (e.Data is not null) LogReceived?.Invoke(e.Data); };
-        _process.ErrorDataReceived += (_, e) => { if (e.Data is not null) LogReceived?.Invoke(e.Data); };
+        _process.OutputDataReceived += (_, e) => Emit(e.Data);
+        _process.ErrorDataReceived += (_, e) => Emit(e.Data);
 
         _process.Start();
         _process.BeginOutputReadLine();
@@ -163,6 +169,39 @@ public sealed class AetherController
             System.Threading.Thread.Sleep(400);
         }
         return false;
+    }
+
+    private static readonly string[] Noise =
+    {
+        "tls verification: pin-based",
+        "tls verification: system",
+        "probing gateway",
+        "handshake ok",
+    };
+
+    private string _lastLine = "";
+    private int _repeat;
+
+    private void Emit(string? line)
+    {
+        if (line is not { Length: > 0 }) return;
+
+        foreach (var n in Noise)
+            if (line.Contains(n, StringComparison.Ordinal)) return;
+
+        if (line == _lastLine)
+        {
+            _repeat++;
+            if (_repeat == 5) LogReceived?.Invoke("  (repeating, further copies hidden)");
+            if (_repeat >= 5) return;
+        }
+        else
+        {
+            _lastLine = line;
+            _repeat = 0;
+        }
+
+        LogReceived?.Invoke(line);
     }
 
     public void Stop()

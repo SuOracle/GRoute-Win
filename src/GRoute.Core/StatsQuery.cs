@@ -6,10 +6,11 @@ namespace GRoute.Windows.Core;
 
 public static class StatsQuery
 {
-    private static readonly string XrayPath =
-        Path.Combine(AppContext.BaseDirectory, "libs", "xray.exe");
+    private static readonly string XrayPath = Bin.Path("xray");
 
-    public static (long Up, long Down) Query(int apiPort)
+    public static (long Up, long Down) Query(int apiPort) => Query(apiPort, "proxy");
+
+    public static (long Up, long Down) Query(int apiPort, string tag)
     {
         long up = 0;
         long down = 0;
@@ -18,7 +19,7 @@ public static class StatsQuery
             var psi = new ProcessStartInfo
             {
                 FileName = XrayPath,
-                Arguments = $"api statsquery --server=127.0.0.1:{apiPort} -pattern \"outbound>>>proxy>>>traffic\"",
+                Arguments = $"api statsquery --server=127.0.0.1:{apiPort} -pattern \"outbound>>>{tag}>>>traffic\"",
                 WorkingDirectory = Path.GetDirectoryName(XrayPath)!,
                 UseShellExecute = false,
                 CreateNoWindow = true,

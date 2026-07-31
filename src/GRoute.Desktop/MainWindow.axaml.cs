@@ -103,6 +103,8 @@ public partial class MainWindow : Window
         "tor_title", "tor_hint", "dns_title", "dns_hint",
         "adblock_title", "about_version", "kill_admin_prompt", "manual_configs", "title_admin", "warp_blocked",
         "logs_clear",
+        "err_title", "err_parse", "err_timeout", "err_network", "err_empty_sub", "err_clipboard",
+        "loc_unknown",
         "unit_ms", "ping_fail",
         "advanced", "add_and_fetch", "proj_aether_desc", "proj_warp_desc", "cf_stopped", "legacy_warp",
         "fragment_sub", "split_sub", "sniffing_sub", "adblock_sub", "usage_vpn", "sub_url",
@@ -154,7 +156,8 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        DesktopPlatform.Register();
+        if (OperatingSystem.IsWindows()) DesktopPlatform.Register();
+        else if (OperatingSystem.IsLinux()) LinuxPlatform.Register();
 
         _appIcon = LoadAppIcon();
         if (_appIcon is not null) Icon = _appIcon;
@@ -646,9 +649,19 @@ public partial class MainWindow : Window
 
     private void OnWindowLoaded(object? sender, RoutedEventArgs e)
     {
+        if (Environment.GetCommandLineArgs().Any(
+                a => string.Equals(a, "--autoconnect", StringComparison.OrdinalIgnoreCase)))
+        {
+            Dispatcher.UIThread.Post(async () =>
+            {
+                await Task.Delay(900);
+                if (!_core.IsRunning && _store.Selected() is not null)
+                    Power_Click(this, new RoutedEventArgs());
+            }, DispatcherPriority.Background);
+        }
+
         Loaded -= OnWindowLoaded;
         Controls.SmoothScroll.Hook(this);
-
 
         if (GroupList is not null)
         {
@@ -789,6 +802,7 @@ public partial class MainWindow : Window
         }
         _tabBack = false;
         _tab = tab;
+        if (tab == "logs") FlushLog();
         SetVis(ProjectsPanel, tab == "projects");
         SetVis(TorPickPanel, tab == "torpick");
         SetVis(ToolsPanel, tab == "tools");
@@ -1678,7 +1692,7 @@ public partial class MainWindow : Window
         e.Handled = true;
         if (!DelayTester.XrayAvailable)
         {
-            await Ask("warning", "xray not found", "Place xray.exe in the libs folder to test servers.");
+            await Ask("warning", "xray not found", "Place the xray binary in the libs folder to test servers.");
             return;
         }
         var list = _store.Configs.Where(x => x.SubId == id).ToList();
@@ -2088,7 +2102,7 @@ public partial class MainWindow : Window
 
     private async void PasteAdd_Click(object? sender, RoutedEventArgs e)
     {
-        AddMenu.IsVisible = false;
+        SetAddMenu(false);
         var clip = GetTopLevel(this)?.Clipboard;
         if (clip is null) return;
 #pragma warning disable CS0618
@@ -2107,11 +2121,21 @@ public partial class MainWindow : Window
             _store.SaveNow();
             ReloadServers();
             Append($"Added {added} server(s) from clipboard.");
+            return;
         }
-        else
+
+        string one = text.Trim();
+        if (one.Length > 0 && one.IndexOfAny(new[] { '\r', '\n', ' ' }) < 0 &&
+            (one.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+             one.StartsWith("https://", StringComparison.OrdinalIgnoreCase)))
         {
-            Append("No valid share links found in the clipboard.");
+            await AddSubscription(one, null);
+            return;
         }
+
+        Append("No valid share links found in the clipboard.");
+        await Ask("warning", Strings.Get(_lang, "err_title"),
+            Strings.Get(_lang, "err_clipboard"));
     }
 
     private static void SelectCombo(ComboBox? box, string? value)
@@ -2146,7 +2170,7 @@ public partial class MainWindow : Window
     {
         if (!DelayTester.XrayAvailable)
         {
-            Append("xray.exe not found — cannot test.");
+            Append("xray not found — cannot test.");
             return;
         }
         StartTestSweep();
@@ -2198,10 +2222,14 @@ public partial class MainWindow : Window
 
         var (color, path) = kind switch
         {
-            "success" => (Color.FromRgb(0x3C, 0xCB, 0x7F), "M4,9.5 L7.5,13 L14,4"),
-            "warning" => (Color.FromRgb(0xE5, 0xA6, 0x3C), "M9,2 L16,15 H2 Z M9,7 V10 M9,12.6 h0.01"),
+            "success" => (Color.FromRgb(0x3C, 0xCB, 0x7F), "M3.5,9.5 L7.5,13.5 L14.5,4.5"),
+            "warning" => (Color.FromRgb(0xE5, 0xA6, 0x3C), "M9,2.5 L16,15.5 H2 Z M9,7.2 V10.4 M9,12.9 h0.01"),
             "error" => (Color.FromRgb(0xE0, 0x57, 0x5C), "M4,4 L14,14 M14,4 L4,14"),
-            _ => (Color.FromRgb(0x6E, 0x9C, 0xF0), "M9,8 V13 M9,5 h0.01")
+            "admin" => (Color.FromRgb(0xE5, 0xA6, 0x3C),
+                        "M9,2 L15,4.4 V9.2 C15,12.6 12.5,15.3 9,16 C5.5,15.3 3,12.6 3,9.2 V4.4 Z "
+                        + "M9,6.6 V9.8 M9,12.1 h0.01"),
+            _ => (Color.FromRgb(0x6E, 0x9C, 0xF0),
+                  "M9,2 A7,7 0 1 0 9,16 A7,7 0 1 0 9,2 Z M9,8 V12.8 M9,5.4 h0.01")
         };
 
         DlgIcon.Stroke = new SolidColorBrush(color);
@@ -2244,25 +2272,55 @@ public partial class MainWindow : Window
 
     private async void AddSub_Click(object? sender, RoutedEventArgs e)
     {
-        string url = (SubUrl.Text ?? "").Trim();
-        if (url.Length == 0)
+        if (SubUrl is null)
         {
-            await Ask("warning", "URL required", "Paste a subscription link first.");
+            Append("Subscription box is not available on this screen.");
             return;
         }
 
+        string url = (SubUrl.Text ?? "").Trim();
+        if (url.Length == 0)
+        {
+            await Ask("warning", Strings.Get(_lang, "err_title"),
+                Strings.Get(_lang, "err_clipboard"));
+            return;
+        }
+
+        if (await AddSubscription(url, SubNameBox?.Text))
+        {
+            SubUrl.Text = "";
+            if (SubNameBox is not null) SubNameBox.Text = "";
+        }
+    }
+
+    private string FriendlyError(Exception ex)
+    {
+        var e = ex.GetBaseException();
+        if (e is TaskCanceledException or TimeoutException)
+            return Strings.Get(_lang, "err_timeout");
+        if (e is System.Net.Sockets.SocketException or System.Net.Http.HttpRequestException)
+            return Strings.Get(_lang, "err_network");
+        if (e is FormatException or System.Text.Json.JsonException or UriFormatException)
+            return Strings.Get(_lang, "err_parse");
+        return e.Message;
+    }
+
+    private async Task<bool> AddSubscription(string url, string? name)
+    {
         try
         {
+            Append($"Fetching subscription {HostOf(url)} \u2026");
             var result = await SubscriptionFetcher.FetchFull(url);
             if (result.Configs.Count == 0)
             {
-                await Ask("warning", "Nothing found", "That subscription returned no usable servers.");
-                return;
+                await Ask("warning", Strings.Get(_lang, "err_title"),
+                    Strings.Get(_lang, "err_empty_sub"));
+                return false;
             }
 
             var sub = new Subscription
             {
-                Name = string.IsNullOrWhiteSpace(SubName.Text) ? HostOf(url) : SubName.Text!.Trim(),
+                Name = string.IsNullOrWhiteSpace(name) ? HostOf(url) : name!.Trim(),
                 Url = url
             };
             if (result.UserInfo is not null)
@@ -2273,15 +2331,16 @@ public partial class MainWindow : Window
             }
 
             _store.UpsertSubscription(sub, result.Configs);
-            SubUrl.Text = "";
-            SubName.Text = "";
             ReloadSubs();
             ReloadServers();
             await Ask("success", "Subscription added", $"{result.Configs.Count} servers imported.");
+            return true;
         }
         catch (Exception ex)
         {
-            await Ask("error", "Fetch failed", ex.Message);
+            Append("Subscription failed: " + ex.GetBaseException().Message);
+            await Ask("error", Strings.Get(_lang, "err_title"), FriendlyError(ex));
+            return false;
         }
     }
 
@@ -2728,7 +2787,6 @@ public partial class MainWindow : Window
     {
         if (SelectedHover is not null) SelectedHover.Opacity = 1.0;
     }
-
 
     private void SelectedBox_Exit(object? sender, PointerEventArgs e)
     {
@@ -3201,7 +3259,7 @@ public partial class MainWindow : Window
 
     private void OpenProjects_Click(object? sender, RoutedEventArgs e)
     {
-        AddMenu.IsVisible = false;
+        SetAddMenu(false);
         Project_Changed(this, e);
         ProjOrb.SetText("START", true);
         ShowTab("projects");
@@ -3624,7 +3682,6 @@ public partial class MainWindow : Window
         };
         timer.Start();
     }
-
 
     private async void ProjectStart_Click(object? sender, RoutedEventArgs e)
     {
@@ -5576,6 +5633,11 @@ public partial class MainWindow : Window
 
     private async void SelectModeByUser(string mode)
     {
+        if (OperatingSystem.IsLinux() && mode == "system")
+            Append("On Linux most browsers ignore the system proxy setting. "
+                   + "Use TUN mode, or point the browser at 127.0.0.1:"
+                   + ConfigBuilder.HttpPort + " yourself.");
+
         if (mode == "tun" && !Platform.Elevation.IsAdministrator())
         {
             bool relaunch = await Ask("warning",
@@ -5596,7 +5658,9 @@ public partial class MainWindow : Window
             else
             {
                 _store.SetMode("system");
-                Append("Elevation was cancelled — run GRoute as administrator to use TUN mode.");
+                Append(OperatingSystem.IsLinux()
+                    ? "Could not elevate. Start GRoute with sudo to use TUN mode."
+                    : "Elevation was cancelled \u2014 run GRoute as administrator to use TUN mode.");
                 RefreshQuickChecks();
                 UpdateTrayModeChecks();
             }
@@ -5880,7 +5944,7 @@ public partial class MainWindow : Window
 
     private async void AddWarp_Click(object? sender, RoutedEventArgs e)
     {
-        AddMenu.IsVisible = false;
+        SetAddMenu(false);
         bool addedMasque = false;
         try
         {
@@ -6474,23 +6538,27 @@ public partial class MainWindow : Window
     {
         string text = LogText?.SelectedText is { Length: > 0 } sel ? sel : _log.ToString();
         if (text.Length == 0) return;
-        var cb = Clipboard;
-        if (cb is null) return;
+        bool wasSelection = LogText?.SelectedText is { Length: > 0 };
+
         try
         {
-            await cb.SetTextAsync(text);
-            Append(LogText?.SelectedText is { Length: > 0 }
-                ? "Selection copied."
-                : "Log copied.");
+            await Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                var cb = TopLevel.GetTopLevel(this)?.Clipboard;
+                if (cb is null) throw new InvalidOperationException("no clipboard on this window");
+                await cb.SetTextAsync(text);
+            });
+            Append(wasSelection ? "Selection copied." : "Log copied.");
         }
         catch (Exception ex)
         {
-            Append("Copy failed: " + ex.Message);
+            Append("Copy failed: " + ex.GetBaseException().Message);
         }
     }
 
     private void ClearLogs_Click(object? sender, RoutedEventArgs e)
     {
+        _logDirty = false;
         _log.Clear();
         if (LogText is not null) LogText.Text = "";
         SetVis(LogPlaceholder, true);
@@ -6498,14 +6566,36 @@ public partial class MainWindow : Window
 
     private void OnLog(string line) => Dispatcher.UIThread.Post(() => Append(line));
 
+    private DispatcherTimer? _logFlush;
+    private bool _logDirty;
+
     private void Append(string line)
     {
         _log.AppendLine(line);
         if (_log.Length > 60000) _log.Remove(0, 20000);
-        if (LogText is not null) LogText.Text = _log.ToString();
         if (LogPlaceholder is not null) LogPlaceholder.IsVisible = _log.Length == 0;
-        LogScroll?.ScrollToEnd();
 
+        _logDirty = true;
+        if (_logFlush is not null) return;
+
+        _logFlush = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
+        _logFlush.Tick += (_, _) =>
+        {
+            if (!_logDirty) return;
+            _logDirty = false;
+            if (_tab != "logs" || LogText is null) return;
+            LogText.Text = _log.ToString();
+            LogScroll?.ScrollToEnd();
+        };
+        _logFlush.Start();
+    }
+
+    private void FlushLog()
+    {
+        if (LogText is null) return;
+        LogText.Text = _log.ToString();
+        _logDirty = false;
+        LogScroll?.ScrollToEnd();
     }
 
     private async void Power_Click(object? sender, RoutedEventArgs e)
@@ -6727,13 +6817,13 @@ public partial class MainWindow : Window
         if (_store.Selected() is not ProxyConfig cfg) return;
         _pinging = true;
         if (PingFx is not null) PingFx.Busy = true;
-        var xrayPath = Path.Combine(AppContext.BaseDirectory, "libs", "xray.exe");
+        var xrayPath = Bin.Path("xray");
         if (!File.Exists(xrayPath))
         {
             _lastPingMs = int.MinValue;
             SetPingLabel("\u2014");
             if (PingFx is not null) { PingFx.Busy = false; PingFx.Ping = -1; }
-            Append("Ping: xray.exe not found at " + xrayPath + " — rebuild after updating GRoute.Desktop.csproj so libs copies.");
+            Append("Ping: xray not found at " + xrayPath);
             _pinging = false;
             return;
         }
@@ -7323,8 +7413,16 @@ public partial class MainWindow : Window
             var loc = await IpLocator.FetchAsync(throughProxy, token);
             if (loc is null)
             {
-                if (!token.IsCancellationRequested && gen == _locGen && IpLocator.LastError is { Length: > 0 })
-                    Append("Location lookup failed: " + IpLocator.LastError);
+                if (token.IsCancellationRequested || gen != _locGen) return;
+                Append($"Location lookup failed ({(throughProxy ? "through tunnel" : "direct")}): "
+                       + (IpLocator.LastError ?? "no reason given"));
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (gen != _locGen) return;
+                    if (IpPopIp is not null) IpPopIp.Text = "\u2014";
+                    if (IpPopCity is not null) IpPopCity.Text = Strings.Get(_lang, "loc_unknown");
+                    _ipPopupReady = true;
+                });
                 return;
             }
             if (token.IsCancellationRequested || gen != _locGen) return;
@@ -7417,8 +7515,6 @@ public partial class MainWindow : Window
                + $", admin={Platform.Elevation.IsAdministrator()}"
                + $", platform={(Platform.CreateTun is null ? "no" : "yes")}");
 
-        // apps honour the system proxy before the routing table, so a stale
-        // setting would keep traffic out of the tunnel entirely
         try
         {
             Platform.Proxy.Disable();
@@ -7437,9 +7533,23 @@ public partial class MainWindow : Window
         }
         if (!Platform.Elevation.IsAdministrator())
         {
-            TunFellBack("TUN needs administrator rights \u2014 GRoute is not elevated, "
-                        + "so traffic is going through the system proxy instead. "
-                        + "Restart GRoute as administrator.");
+
+            Append("TUN needs administrator rights; asking to restart elevated.");
+            bool elevate = await Ask("admin",
+                Strings.Get(_lang, "tun_admin_title"),
+                Strings.Get(_lang, "tun_admin_prompt"),
+                withCancel: true);
+
+            if (elevate && Platform.Elevation.RelaunchAsAdmin("--autoconnect"))
+            {
+                ShutdownAndClose();
+                return;
+            }
+
+            TunFellBack(OperatingSystem.IsLinux()
+                ? "TUN needs root. Start GRoute with sudo; using the system proxy for now."
+                : "TUN needs administrator rights. Using the system proxy instead \u2014 "
+                  + "right-click GRoute and choose Run as administrator.");
             return;
         }
         if (_store.Selected() is not ProxyConfig cfg)
@@ -7489,8 +7599,7 @@ public partial class MainWindow : Window
         try
         {
             var nics = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces();
-            var tun = nics.FirstOrDefault(n =>
-                n.Name.Contains("GRoute", StringComparison.OrdinalIgnoreCase));
+            var tun = nics.FirstOrDefault(n => n.Name.Equals("GRoute", StringComparison.Ordinal));
             if (tun is null)
             {
                 Append("TUN: no GRoute adapter found \u2014 tun2socks did not create it.");
@@ -7499,9 +7608,7 @@ public partial class MainWindow : Window
             var ips = tun.GetIPProperties();
             string addr = string.Join(", ",
                 ips.UnicastAddresses.Select(a => a.Address.ToString()));
-            Append($"TUN: adapter '{tun.Name}' {tun.OperationalStatus}, address {addr}");
-            if (ips.GatewayAddresses.Count == 0)
-                Append("TUN: adapter has no gateway \u2014 traffic will not route through it.");
+            Append($"TUN: adapter '{tun.Name}' present, address {addr}");
         }
         catch (Exception ex)
         {

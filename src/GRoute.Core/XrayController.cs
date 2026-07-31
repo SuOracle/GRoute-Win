@@ -25,7 +25,7 @@ public sealed class XrayController
 
     public XrayController()
     {
-        _xrayPath = Path.Combine(AppContext.BaseDirectory, "libs", "xray.exe");
+        _xrayPath = Bin.Path("xray");
     }
 
     public bool IsRunning => Alive(_process);
@@ -35,7 +35,7 @@ public sealed class XrayController
         if (IsRunning) return;
         if (!File.Exists(_xrayPath))
             throw new FileNotFoundException(
-                "xray.exe not found. Place it in the libs folder next to the app.", _xrayPath);
+                $"xray not found. Expected it here:\n\n{_xrayPath}", _xrayPath);
 
         KillStray();
         WaitPortFree(ConfigBuilder.SocksPort, 1500);

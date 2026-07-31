@@ -40,7 +40,8 @@ public sealed class ConfigStore
     public bool Mux { get; private set; }
     public bool AdBlock { get; private set; }
     public int MuxConcurrency { get; private set; } = 8;
-    public string Mode { get; private set; } = "system";
+    public string Mode { get; private set; } =
+        OperatingSystem.IsLinux() ? "tun" : "system";
 
     public string ExitAction { get; private set; } = "exit";
 

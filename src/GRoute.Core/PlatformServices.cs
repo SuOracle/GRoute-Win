@@ -41,6 +41,10 @@ public static class Platform
     public static IElevation Elevation { get; set; } = new NullElevation();
     public static IKillSwitch KillSwitch { get; set; } = new NullKillSwitch();
     public static Func<ITunService>? CreateTun { get; set; }
+
+    public static Func<string, (string File, string[] Prefix)>? BypassSpawn { get; set; }
+
+    public static Action<string>? AllowWrite { get; set; }
     public static IStartupTask Startup { get; set; } = new NullStartupTask();
 
     private sealed class NullSystemProxy : ISystemProxy

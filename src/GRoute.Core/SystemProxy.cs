@@ -14,6 +14,7 @@ public static class SystemProxy
 
     public static void Enable(string proxyAddress)
     {
+        NetGuard.MarkDirty("proxy");
         using var key = Registry.CurrentUser.OpenSubKey(RegPath, writable: true);
         if (key is null) return;
         key.SetValue("ProxyEnable", 1, RegistryValueKind.DWord);
@@ -26,6 +27,7 @@ public static class SystemProxy
 
     public static void Disable()
     {
+        NetGuard.MarkClean("proxy");
         using var key = Registry.CurrentUser.OpenSubKey(RegPath, writable: true);
         if (key is null) return;
         key.SetValue("ProxyEnable", 0, RegistryValueKind.DWord);

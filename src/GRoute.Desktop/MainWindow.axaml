@@ -1792,7 +1792,7 @@
                         <StackPanel Spacing="8">
                             <c:VText Text="{DynamicResource Str.sub_url}" Classes="muted"/>
                             <TextBox Name="SubUrl" Watermark="https://..."/>
-                            <TextBox Name="SubName" Watermark="Name (optional)"/>
+                            <TextBox Name="SubNameBox" Watermark="Name (optional)"/>
                             <Button Classes="live primary" Content="{DynamicResource Str.add_and_fetch}" Click="AddSub_Click"
                                     HorizontalAlignment="Left"/>
                         </StackPanel>
@@ -2408,7 +2408,7 @@
                         <StackPanel Orientation="Horizontal" Spacing="11">
                             <Panel Width="34" Height="34" VerticalAlignment="Center">
                                 <Ellipse Name="DlgIconBg" Width="34" Height="34" Fill="#1B2F58"/>
-                                <Path Name="DlgIcon" Width="18" Height="18" Stretch="Uniform"
+                                <Path Name="DlgIcon" Width="18" Height="18" Stretch="None"
                                       StrokeThickness="1.9" StrokeLineCap="Round" StrokeJoin="Round"
                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Panel>

@@ -20,7 +20,7 @@ public sealed class TorController
     public const int ControlPort = 9151;
 
     private static readonly string TorPath =
-        Path.Combine(AppContext.BaseDirectory, "libs", "tor.exe");
+        Bin.Path("tor");
 
     private static readonly string GeoIp =
         Path.Combine(AppContext.BaseDirectory, "libs", "geoip");
@@ -55,6 +55,7 @@ public sealed class TorController
         try
         {
             Directory.CreateDirectory(DataDir);
+            Platform.AllowWrite?.Invoke(DataDir);
             KillStray();
             WaitPortFree(SocksPort, 3000);
 
@@ -81,10 +82,16 @@ public sealed class TorController
                 sb.AppendLine($"Socks5Proxy 127.0.0.1:{ConfigBuilder.SocksPort}");
             File.WriteAllText(torrc, sb.ToString());
 
+            var wrap = Platform.BypassSpawn?.Invoke(TorPath);
+            string spawnFile = wrap?.File ?? TorPath;
+            string spawnArgs = wrap is { Prefix.Length: > 0 }
+                ? string.Join(' ', wrap.Value.Prefix) + $" -f \"{torrc}\""
+                : $"-f \"{torrc}\"";
+
             var psi = new ProcessStartInfo
             {
-                FileName = TorPath,
-                Arguments = $"-f \"{torrc}\"",
+                FileName = spawnFile,
+                Arguments = spawnArgs,
                 WorkingDirectory = Path.GetDirectoryName(TorPath) ?? AppContext.BaseDirectory,
                 UseShellExecute = false,
                 CreateNoWindow = true,

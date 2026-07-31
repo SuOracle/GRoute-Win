@@ -21,7 +21,8 @@ public static class ConfigBuilder
         }
     }
 
-    public static string Build(ProxyConfig config, bool fragment = false, bool splitRouting = false, bool sniffEnabled = false, IReadOnlyList<string>? sniffProtocols = null, bool sniffRouteOnly = true, bool mux = false, int muxConcurrency = 8, bool adBlock = false, bool torOnion = false, bool secureDns = true, int torNodePort = 0)
+    public static string Build(ProxyConfig config, bool fragment = false, bool splitRouting = false, bool sniffEnabled = false, IReadOnlyList<string>? sniffProtocols = null, bool sniffRouteOnly = true, bool mux = false, int muxConcurrency = 8, bool adBlock = false, bool torOnion = false, bool secureDns = true, int torNodePort = 0, bool aetherDirect = false,
+        string? serverHost = null)
     {
         var root = new JsonObject
         {
@@ -55,8 +56,9 @@ public static class ConfigBuilder
                     ["skipFallback"] = true
                 });
             }
+
             dnsServers.Add("https://1.1.1.1/dns-query");
-            dnsServers.Add("https://dns.google/dns-query");
+            dnsServers.Add("https://8.8.8.8/dns-query");
 
             root["dns"] = new JsonObject
             {
@@ -173,15 +175,12 @@ public static class ConfigBuilder
                 }
             });
         }
-        // always present: the local-noise rules below need somewhere to send traffic
+
         outbounds.Add(new JsonObject { ["tag"] = "block", ["protocol"] = "blackhole" });
         root["outbounds"] = outbounds;
 
         var rules = new JsonArray();
 
-        // local-network noise: NetBIOS, mDNS, SSDP, WS-Discovery, LLMNR.
-        // in TUN mode the adapter captures these broadcasts and they would
-        // otherwise flood the tunnel for no benefit.
         rules.Add(new JsonObject
         {
             ["type"] = "field",
@@ -218,7 +217,7 @@ public static class ConfigBuilder
             {
                 ["type"] = "field",
                 ["inboundTag"] = new JsonArray("dns-query"),
-                ["outboundTag"] = "proxy"
+                ["outboundTag"] = "direct"
             });
         }
         if (torOnion)
@@ -239,12 +238,45 @@ public static class ConfigBuilder
                 ["outboundTag"] = "block"
             });
         }
+
+        if (aetherDirect)
+        {
+            rules.Add(new JsonObject
+            {
+                ["type"] = "field",
+
+                ["ip"] = new JsonArray(
+                    "162.159.0.0/16", "188.114.96.0/20", "172.65.0.0/16",
+                    "2606:4700:d0::/48", "2606:4700:d1::/48",
+                    "2606:4700:110::/48"),
+                ["outboundTag"] = "direct"
+            });
+        }
+
+        if (!string.IsNullOrWhiteSpace(serverHost) &&
+            !System.Net.IPAddress.TryParse(serverHost, out _))
+        {
+            rules.Add(new JsonObject
+            {
+                ["type"] = "field",
+                ["domain"] = new JsonArray("full:" + serverHost),
+                ["outboundTag"] = "direct"
+            });
+        }
+
+        rules.Add(new JsonObject
+        {
+            ["type"] = "field",
+            ["ip"] = new JsonArray("geoip:private"),
+            ["outboundTag"] = "direct"
+        });
+
         if (splitRouting)
         {
             rules.Add(new JsonObject
             {
                 ["type"] = "field",
-                ["ip"] = new JsonArray("geoip:private", "geoip:ir"),
+                ["ip"] = new JsonArray("geoip:ir"),
                 ["outboundTag"] = "direct"
             });
             rules.Add(new JsonObject

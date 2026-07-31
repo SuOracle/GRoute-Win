@@ -21,12 +21,9 @@ public sealed class PsiphonController
     public const int SocksPort = 1080;
     public const int HttpPort = 1081;
 
-    private static readonly string[] BinaryNames =
-    {
-        "psiphon-tunnel-core.exe",
-        "psiphon-tunnel-core-windows-x86_64.exe",
-        "psiphon.exe"
-    };
+    private static readonly string[] BinaryNames = Bin.IsWindows
+        ? new[] { "psiphon-tunnel-core.exe", "psiphon-tunnel-core-windows-x86_64.exe", "psiphon.exe" }
+        : new[] { "psiphon-tunnel-core", "psiphon-tunnel-core-x86_64", "psiphon" };
 
     private static readonly string DataDir =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GRoute", "psiphon");

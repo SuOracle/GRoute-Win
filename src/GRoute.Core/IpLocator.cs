@@ -35,7 +35,7 @@ public static class IpLocator
             }
             using var http = new HttpClient(handler)
             {
-                Timeout = TimeSpan.FromSeconds(throughProxy ? 25 : 8)
+                Timeout = TimeSpan.FromSeconds(throughProxy ? 12 : 8)
             };
             http.DefaultRequestHeaders.Add("User-Agent", "GRoute");
             http.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
@@ -50,10 +50,22 @@ public static class IpLocator
                    ?? await TryIpApi(http, ip)
                    ?? await TryIpApiCo(http, ip);
 
-            if (loc is null)
-                LastError = ip is null
-                    ? "no reply from the IP lookup services"
-                    : $"got IP {ip} but no location service answered";
+            if (loc is not null) return loc;
+
+            if (throughProxy && ip is not null)
+            {
+                LastError = $"tunnel too slow for a lookup; resolved {ip} directly";
+                using var plain = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
+                plain.DefaultRequestHeaders.Add("User-Agent", "GRoute");
+                var alt = await TryIpWho(plain, ip)
+                       ?? await TryIpApi(plain, ip)
+                       ?? await TryIpApiCo(plain, ip);
+                if (alt is not null) return alt;
+            }
+
+            LastError = ip is null
+                ? "no reply from the IP lookup services"
+                : $"got IP {ip} but no location service answered";
             return loc;
         }
         catch (Exception ex)

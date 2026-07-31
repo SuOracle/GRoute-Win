@@ -9,20 +9,19 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <AssemblyName>GRoute</AssemblyName>
     <RootNamespace>GRoute.Desktop</RootNamespace>
-    <ApplicationVersion>2</ApplicationVersion>
-    <Version>2.0.0</Version>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.0.0.0</FileVersion>
-    <InformationalVersion>2.0.0</InformationalVersion>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <ApplicationVersion>3</ApplicationVersion>
+    <Version>2.0.1</Version>
+    <AssemblyVersion>2.0.1.0</AssemblyVersion>
+    <FileVersion>2.0.1.0</FileVersion>
+    <InformationalVersion>2.0.1</InformationalVersion>
+    <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
-    <PublishReadyToRun>true</PublishReadyToRun>
+    <PublishReadyToRun Condition="'$(RuntimeIdentifier)' == 'win-x64'">true</PublishReadyToRun>
     <PublishTrimmed>false</PublishTrimmed>
     <DebugType>none</DebugType>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
-
-  <!-- exe icon: taskbar, Explorer, Alt-Tab, and Add/Remove Programs -->
   <PropertyGroup Condition="Exists('Assets\GRoute.ico')">
     <ApplicationIcon>Assets\GRoute.ico</ApplicationIcon>
   </PropertyGroup>
@@ -52,18 +51,23 @@
     <PackageReference Include="Avalonia.Diagnostics" Version="11.3.18" Condition="'$(Configuration)' == 'Debug'" />
     <PackageReference Include="FluentAvaloniaUI" Version="2.5.1" />
   </ItemGroup>
-
-  <!-- engine binaries and data files: copied on build AND on publish -->
   <ItemGroup>
     <Content Include="libs\**" Exclude="libs\**\*.pdb"
-             Condition="Exists('libs')">
+             Condition="Exists('libs') And $(RuntimeIdentifier.StartsWith('win'))">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <Link>libs\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Content>
   </ItemGroup>
 
-  <Target Name="WarnMissingLibs" AfterTargets="Publish">
+  <Target Name="NoteLinuxLibs" AfterTargets="Publish"
+          Condition="!$(RuntimeIdentifier.StartsWith('win'))">
+    <Message Importance="high"
+             Text="Linux publish: libs/ was not copied. Put the Linux engines (xray, sing-box, tor, tun2socks, geoip, geoip6) in a libs/ folder next to the published GRoute binary." />
+  </Target>
+
+  <Target Name="WarnMissingLibs" AfterTargets="Publish"
+          Condition="$(RuntimeIdentifier.StartsWith('win'))">
     <ItemGroup>
       <_Shipped Include="$(PublishDir)libs\**" />
     </ItemGroup>

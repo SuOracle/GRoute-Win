@@ -6,11 +6,30 @@ namespace GRoute.Desktop;
 
 internal static class Program
 {
+    private static void RestoreNetwork()
+    {
+        try
+        {
+            if (OperatingSystem.IsWindows()) DesktopPlatform.CleanupStaleState();
+            else if (OperatingSystem.IsLinux()) LinuxPlatform.CleanupStaleState();
+        }
+        catch
+        {
+        }
+    }
+
     [STAThread]
     public static void Main(string[] args)
     {
+
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => RestoreNetwork();
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
             WriteCrash(e.ExceptionObject as Exception);
+            RestoreNetwork();
+        };
+        Console.CancelKeyPress += (_, _) => RestoreNetwork();
+
         System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (_, e) =>
             WriteCrash(e.Exception);
         try
@@ -29,7 +48,6 @@ internal static class Program
         if (ex is null) return;
         string text = DateTime.Now + Environment.NewLine + ex;
 
-        // Program Files is read-only for a normal user, so fall back to AppData
         foreach (var dir in CrashDirs())
         {
             try

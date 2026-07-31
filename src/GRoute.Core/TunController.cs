@@ -21,7 +21,7 @@ public sealed class TunController
     private const string TunDns6 = "2606:4700:4700::1111";
 
     private static readonly string Tun2socksPath =
-        Path.Combine(AppContext.BaseDirectory, "libs", "tun2socks-windows-amd64.exe");
+        Bin.Path("tun2socks-windows-amd64");
     private static readonly string WintunPath =
         Path.Combine(AppContext.BaseDirectory, "libs", "wintun.dll");
 
@@ -134,11 +134,15 @@ public sealed class TunController
         var deadline = DateTime.UtcNow.AddMilliseconds(timeoutMs);
         while (DateTime.UtcNow < deadline)
         {
-            if (NetworkInterface.GetAllNetworkInterfaces()
-                    .Any(n => n.Name.Equals(AdapterName, StringComparison.OrdinalIgnoreCase)))
+            int idx = TunInterfaceIndex();
+            if (idx > 0)
+            {
+                Log?.Invoke($"TUN adapter '{AdapterName}' ready, interface index {idx}.");
                 return true;
+            }
             await Task.Delay(200);
         }
+        Log?.Invoke($"TUN adapter '{AdapterName}' never reported an interface index.");
         return false;
     }
 
@@ -150,11 +154,38 @@ public sealed class TunController
         Run("netsh", $"interface ipv6 set dnsservers name=\"{AdapterName}\" static {TunDns6} primary");
     }
 
+    private static readonly string[] DohResolvers =
+        { "1.1.1.1", "1.0.0.1", "8.8.8.8", "8.8.4.4", "9.9.9.9" };
+
     private void AddRoutes()
     {
+        NetGuard.MarkDirty("tun");
+
+        if (_gateway is not null)
+        {
+            foreach (var r in DohResolvers)
+            {
+
+                Run("route", $"delete {r} mask 255.255.255.255");
+                Run("route", $"add {r} mask 255.255.255.255 {_gateway} metric 1");
+            }
+        }
+
         Run("route", $"add {_serverIp} mask 255.255.255.255 {_gateway} metric 1");
-        Run("route", $"add 0.0.0.0 mask 128.0.0.0 {TunGateway} metric 5");
-        Run("route", $"add 128.0.0.0 mask 128.0.0.0 {TunGateway} metric 5");
+
+        int idx = TunInterfaceIndex();
+        if (idx <= 0)
+        {
+            Log?.Invoke("TUN: no interface index for the adapter; refusing to add routes "
+                        + "(they would bind to the physical NIC and bypass the tunnel).");
+            return;
+        }
+
+        Run("route", $"delete 0.0.0.0 mask 128.0.0.0");
+        Run("route", $"delete 128.0.0.0 mask 128.0.0.0");
+        Run("route", $"add 0.0.0.0 mask 128.0.0.0 {TunGateway} metric 1 IF {idx}");
+        Run("route", $"add 128.0.0.0 mask 128.0.0.0 {TunGateway} metric 1 IF {idx}");
+        Log?.Invoke($"TUN: split-default routes bound to interface {idx}.");
 
         if (_serverIp6 is not null && _gateway6 is not null)
             Run("netsh", $"interface ipv6 add route {_serverIp6}/128 \"{_gateway6Interface}\" {_gateway6} metric=1 store=active");
@@ -165,8 +196,30 @@ public sealed class TunController
         _routesAdded = true;
     }
 
+    private static int TunInterfaceIndex()
+    {
+        try
+        {
+            foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                if (!nic.Name.Equals(AdapterName, StringComparison.Ordinal)) continue;
+                var props = nic.GetIPProperties().GetIPv4Properties();
+                if (props is not null && props.Index > 0) return props.Index;
+            }
+        }
+        catch
+        {
+        }
+        return 0;
+    }
+
     private void RemoveRoutes()
     {
+        NetGuard.MarkClean("tun");
+
+        foreach (var r in DohResolvers)
+            Run("route", $"delete {r} mask 255.255.255.255");
+
         Run("route", "delete 0.0.0.0 mask 128.0.0.0");
         Run("route", "delete 128.0.0.0 mask 128.0.0.0");
         if (_serverIp is not null) Run("route", $"delete {_serverIp}");

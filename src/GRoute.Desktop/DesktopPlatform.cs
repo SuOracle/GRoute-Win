@@ -4,8 +4,88 @@ namespace GRoute.Desktop;
 
 public static class DesktopPlatform
 {
+
+    public static void CleanupStaleState()
+    {
+        try
+        {
+            if (NetGuard.IsDirty("killswitch"))
+            {
+                Netsh("advfirewall set allprofiles firewallpolicy blockinbound,allowoutbound");
+                for (int i = 0; i < 8; i++)
+                    Netsh($"advfirewall firewall delete rule name=\"GRoute Kill Switch Allow {i}\"");
+                Netsh("advfirewall firewall delete rule name=\"GRoute Kill Switch Loopback\"");
+                Netsh("advfirewall firewall delete rule name=\"GRoute Kill Switch LocalNet\"");
+                Netsh("advfirewall firewall delete rule name=\"GRoute Kill Switch\"");
+            }
+
+            if (NetGuard.IsDirty("tun"))
+            {
+                Cmd("route", "delete 0.0.0.0 mask 128.0.0.0");
+                Cmd("route", "delete 128.0.0.0 mask 128.0.0.0");
+                Netsh("interface ipv6 delete route ::/1 \"GRoute\"");
+                Netsh("interface ipv6 delete route 8000::/1 \"GRoute\"");
+            }
+
+            if (NetGuard.IsDirty("proxy"))
+            {
+                try { new WindowsSystemProxy().Disable(); } catch { }
+            }
+
+            foreach (var name in new[] { "tun2socks-windows-amd64", "tor", "xray", "sing-box", "aether" })
+            {
+                try
+                {
+                    foreach (var p in System.Diagnostics.Process.GetProcessesByName(name))
+                    {
+                        try
+                        {
+                            string? path = p.MainModule?.FileName;
+                            if (path is not null &&
+                                path.StartsWith(AppContext.BaseDirectory, StringComparison.OrdinalIgnoreCase))
+                                p.Kill(entireProcessTree: true);
+                        }
+                        catch { }
+                        finally { try { p.Dispose(); } catch { } }
+                    }
+                }
+                catch { }
+            }
+
+            NetGuard.ClearAll();
+        }
+        catch
+        {
+        }
+    }
+
+    private static void Netsh(string args) => Cmd("netsh", args);
+
+    private static void Cmd(string file, string args)
+    {
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = file,
+                Arguments = args,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            };
+            using var p = System.Diagnostics.Process.Start(psi);
+            p?.WaitForExit(6000);
+        }
+        catch
+        {
+        }
+    }
+
     public static void Register()
     {
+        CleanupStaleState();
+
         if (!OperatingSystem.IsWindows()) return;
 
         Platform.Proxy = new WindowsSystemProxy();

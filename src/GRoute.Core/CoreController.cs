@@ -67,7 +67,8 @@ public sealed class CoreController
         }
 
         return ConfigBuilder.Build(target, fragment, splitRouting, sniffEnabled, sniffProtocols,
-            sniffRouteOnly, mux, muxConcurrency, adBlock, torOnion && TorController.Available, secureDns, torNodePort);
+            sniffRouteOnly, mux, muxConcurrency, adBlock, torOnion && TorController.Available, secureDns,
+            torNodePort, UsesAether(config), config.Address);
     }
 
     public void Start(ProxyConfig config, string configJson) => Start(config, configJson, false, null);
