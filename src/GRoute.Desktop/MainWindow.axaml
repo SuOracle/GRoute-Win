@@ -1802,7 +1802,7 @@
                         <ItemsControl Name="SubList">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="core:Subscription">
-                                    <Border Classes="card" Padding="13,11" Margin="0,0,0,8">
+                                    <Border Name="SubRow" Classes="card" Padding="13,11" Margin="0,0,0,8">
                                         <Grid ColumnDefinitions="*,Auto,Auto">
                                             <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Name}" Foreground="White" FontSize="13.5"

@@ -421,13 +421,22 @@ public partial class MainWindow : Window
         if (NetWarnContent is not null) NetWarnContent.Opacity = 1;
     }
 
-    private void QueueWindowHeight()
+    private void QueueWindowHeight(int retries = 25)
     {
         if (_heightQueued) return;
         _heightQueued = true;
         Dispatcher.UIThread.Post(() =>
         {
             _heightQueued = false;
+            // another animation owns the surface right now; try again shortly
+            // rather than dropping the resize on the floor
+            if (_surfaceDriven && retries > 0)
+            {
+                var t = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(30) };
+                t.Tick += (_, _) => { t.Stop(); QueueWindowHeight(retries - 1); };
+                t.Start();
+                return;
+            }
             AnimateWindowHeight();
         }, DispatcherPriority.Loaded);
     }
@@ -1679,6 +1688,16 @@ public partial class MainWindow : Window
         }
         if (!await Ask("warning", "Delete selected?",
                 $"{list.Count} servers will be removed.", withCancel: true)) return;
+
+        var ids = list.Select(x => x.Id).ToHashSet();
+        var rows = GroupList is null
+            ? new List<Control>()
+            : GroupList.GetVisualDescendants().OfType<Border>()
+                .Where(b => b.Name == "CfgBox" && b.Tag is string t && ids.Contains(t))
+                .Cast<Control>().ToList();
+        if (rows.Count > 0)
+            await Task.WhenAll(rows.Select(SlideOutRow));
+
         foreach (var c in list) _store.Delete(c.Id);
         _store.SaveNow();
         ExitSelectMode();
@@ -1848,6 +1867,37 @@ public partial class MainWindow : Window
             }
         }
         DispatcherTimer.RunOnce(RebuildGroups, TimeSpan.FromMilliseconds(60));
+    }
+
+    private async Task SlideOutRow(Control? row)
+    {
+        if (row is null || !row.IsVisible) return;
+        row.ZIndex = 1;
+
+        double h = row.Bounds.Height;
+        if (h <= 0) h = row.DesiredSize.Height;
+        if (h <= 0) { row.IsVisible = false; return; }
+
+        var tcs = new TaskCompletionSource();
+        var t0 = DateTime.UtcNow;
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(12) };
+        timer.Tick += (_, _) =>
+        {
+            double p = Math.Min(1.0, (DateTime.UtcNow - t0).TotalMilliseconds / 190.0);
+            double e = 1 - Math.Pow(1 - p, 3);
+            row.Opacity = 1 - e;
+            row.RenderTransform = new TranslateTransform(-34.0 * e, 0);
+            row.Height = h * (1 - e);
+            if (p < 1) return;
+            timer.Stop();
+            row.IsVisible = false;
+            row.Opacity = 1;
+            row.RenderTransform = null;
+            row.Height = double.NaN;
+            tcs.TrySetResult();
+        };
+        timer.Start();
+        await tcs.Task;
     }
 
     private static Control? FindAncestorNamed(Control start, string name)
@@ -2155,11 +2205,12 @@ public partial class MainWindow : Window
     private static string ComboText(ComboBox? box) =>
         (box?.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "";
 
-    private void DeleteServer_Click(object? sender, RoutedEventArgs e)
+    private async void DeleteServer_Click(object? sender, RoutedEventArgs e)
     {
         if (sender is not Control ctl || ctl.Tag is not string id) return;
         e.Handled = true;
         _expandedIds.Add(_store.Configs.FirstOrDefault(x => x.Id == id)?.SubId ?? ManualId);
+        await SlideOutRow(FindAncestorNamed(ctl, "CfgBox"));
         _store.Delete(id);
         _store.SaveNow();
         RebuildGroups();
@@ -2389,6 +2440,7 @@ public partial class MainWindow : Window
         if (sub is null) return;
         if (!await Ask("warning", "Delete subscription?",
                 $"{sub.Name} and its servers will be removed.", withCancel: true)) return;
+        await SlideOutRow(FindAncestorNamed(ctl, "SubRow"));
         _store.DeleteSubscription(id);
         ReloadSubs();
         ReloadServers();
@@ -3259,10 +3311,16 @@ public partial class MainWindow : Window
 
     private void OpenProjects_Click(object? sender, RoutedEventArgs e)
     {
-        SetAddMenu(false);
-        Project_Changed(this, e);
         ProjOrb.SetText("START", true);
+        // Fill the card BEFORE switching tabs. Project_Changed writes the title
+        // and the wrapped description, and it does not resize while another tab
+        // is active — so ShowTab then measures real content and animates once.
+        // With the old order the first measure saw an empty card, jumped short,
+        // and a second pass had to correct it.
+        Project_Changed(this, e);
+        UpdateLayout();
         ShowTab("projects");
+        QueueWindowHeight();
     }
 
     private void CloseProjects_Click(object? sender, RoutedEventArgs e) => GoBack();
