@@ -824,13 +824,15 @@ public partial class MainWindow : Window
         AnimateIn(ActivePanel(), dir);
         _drawerOpen = false;
         if (PanelScroll is not null) PanelScroll.Target = ScrollerFor(tab);
+        if (tab == "picker" && AddMenu is not null && AddMenu.IsVisible
+            && _addMenuTimer is null)
+        {
+            AddMenu.Height = double.NaN;
+            AddMenu.Opacity = 1;
+        }
         AnimateWindowHeight();
         SetVis(MenuOverlay, false);
-        if (tab != "picker")
-        {
-            SetAddMenu(false);
-            if (_selectMode) ExitSelectMode();
-        }
+        if (tab != "picker" && _selectMode) ExitSelectMode();
     }
 
     private static string HeaderTabOf(string tab) => tab switch
@@ -2152,7 +2154,6 @@ public partial class MainWindow : Window
 
     private async void PasteAdd_Click(object? sender, RoutedEventArgs e)
     {
-        SetAddMenu(false);
         var clip = GetTopLevel(this)?.Clipboard;
         if (clip is null) return;
 #pragma warning disable CS0618
@@ -2314,7 +2315,6 @@ public partial class MainWindow : Window
 
     private void OpenSubs_Click(object? sender, RoutedEventArgs e)
     {
-        SetAddMenu(false);
         ReloadSubs();
         ShowTab("subs");
     }
@@ -2449,7 +2449,6 @@ public partial class MainWindow : Window
 
     private void Export_Click(object? sender, RoutedEventArgs e)
     {
-        SetAddMenu(false);
         if (_store.Configs.Count == 0)
         {
             _ = Ask("warning", "Nothing to export", "Add a server first.");
@@ -2536,7 +2535,6 @@ public partial class MainWindow : Window
 
     private async void Import_Click(object? sender, RoutedEventArgs e)
     {
-        SetAddMenu(false);
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = "Import servers",
@@ -4954,11 +4952,12 @@ public partial class MainWindow : Window
 
     private void OpenManual_Click(object? sender, RoutedEventArgs e)
     {
-        SetAddMenu(false);
         ResetManualForm();
         _editingId = null;
         if (ManualTitle is not null) ManualTitle.Text = Strings.Get(_lang, "add_manually");
+        UpdateLayout();
         ShowTab("manual");
+        QueueWindowHeight();
         Dispatcher.UIThread.Post(() =>
         {
             if (ManualPanel is not null) HookCombos(ManualPanel);
@@ -4982,7 +4981,9 @@ public partial class MainWindow : Window
         _editingId = id;
         FillManualForm(cfg);
         if (ManualTitle is not null) ManualTitle.Text = Strings.Get(_lang, "edit_config");
+        UpdateLayout();
         ShowTab("manual");
+        QueueWindowHeight();
         Dispatcher.UIThread.Post(() =>
         {
             if (ManualPanel is not null) HookCombos(ManualPanel);
@@ -6002,7 +6003,6 @@ public partial class MainWindow : Window
 
     private async void AddWarp_Click(object? sender, RoutedEventArgs e)
     {
-        SetAddMenu(false);
         bool addedMasque = false;
         try
         {
