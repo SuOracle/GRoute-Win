@@ -25,6 +25,7 @@ public sealed class ConfigStore
     public bool SniffRouteOnly { get; private set; } = true;
     public Lang Lang { get; private set; }
     public int AutoRefreshHours { get; private set; } = 1;
+    public string? LastAutoRefresh { get; private set; }
     public int MixedPort { get; private set; } = 10626;
     public string LogLevel { get; private set; } = "warning";
     public string? LastQualityAt { get; private set; }
@@ -256,6 +257,18 @@ public sealed class ConfigStore
         Save();
     }
 
+    public DateTime? LastAutoRefreshUtc =>
+        DateTime.TryParse(LastAutoRefresh, CultureInfo.InvariantCulture,
+            DateTimeStyles.RoundtripKind, out var v)
+            ? v.ToUniversalTime()
+            : null;
+
+    public void SetLastAutoRefresh(DateTime utc)
+    {
+        LastAutoRefresh = utc.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
+        Save();
+    }
+
     public void Save()
     {
         _saveCts?.Cancel();
@@ -289,6 +302,7 @@ public sealed class ConfigStore
                 SniffRouteOnly = SniffRouteOnly,
                 Lang = Lang,
                 AutoRefreshHours = AutoRefreshHours,
+                LastAutoRefresh = LastAutoRefresh,
                 MixedPort = MixedPort,
                 LogLevel = LogLevel,
                 DarkTheme = DarkTheme,
@@ -334,6 +348,7 @@ public sealed class ConfigStore
                 if (data.SniffRouteOnly.HasValue) SniffRouteOnly = data.SniffRouteOnly.Value;
                 if (data.Lang.HasValue) Lang = data.Lang.Value;
                 AutoRefreshHours = data.AutoRefreshHours;
+                LastAutoRefresh = data.LastAutoRefresh;
                 if (data.MixedPort.HasValue && data.MixedPort.Value > 0) MixedPort = data.MixedPort.Value;
                 if (!string.IsNullOrEmpty(data.LogLevel)) LogLevel = data.LogLevel;
                 if (data.DarkTheme.HasValue) DarkTheme = data.DarkTheme.Value;
@@ -373,6 +388,7 @@ public sealed class ConfigStore
         public bool? SniffRouteOnly { get; set; }
         public Lang? Lang { get; set; }
         public int AutoRefreshHours { get; set; }
+        public string? LastAutoRefresh { get; set; }
         public int? MixedPort { get; set; }
         public string? LogLevel { get; set; }
         public bool? DarkTheme { get; set; }

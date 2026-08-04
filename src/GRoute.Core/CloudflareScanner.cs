@@ -42,7 +42,7 @@ public static class CloudflareScanner
                 await sem.WaitAsync(ct);
                 try
                 {
-                    int ms = await TcpPing(ip, port, 3000, ct);
+                    int ms = await TcpPing(ip, port, 5000, ct);
                     if (ms >= 0) results.Add(new ScanResult(ip, ms));
                 }
                 finally
@@ -70,8 +70,11 @@ public static class CloudflareScanner
 
             var sw = Stopwatch.StartNew();
             await client.ConnectAsync(ip, port, cts.Token);
+            int connectMs = (int)sw.ElapsedMilliseconds;
 
-            if (port == 443)
+            if (port != 443) return connectMs;
+
+            try
             {
                 await using var ssl = new SslStream(client.GetStream(), false,
                     static (_, _, _, _) => true);
@@ -81,24 +84,19 @@ public static class CloudflareScanner
                         TargetHost = "cloudflare.com",
                         RemoteCertificateValidationCallback = static (_, _, _, _) => true
                     }, cts.Token);
+                return (int)sw.ElapsedMilliseconds;
             }
-            else
+            catch
             {
-                var probe = System.Text.Encoding.ASCII.GetBytes("HEAD / HTTP/1.1\r\nHost: cloudflare.com\r\n\r\n");
-                var stream = client.GetStream();
-                await stream.WriteAsync(probe, cts.Token);
-                var buf = new byte[1];
-                if (await stream.ReadAsync(buf, cts.Token) == 0) return -1;
+                return connectMs;
             }
-
-            sw.Stop();
-            return (int)sw.ElapsedMilliseconds;
         }
         catch
         {
             return -1;
         }
     }
+
 
     private static List<string> RandomIps(int n)
     {

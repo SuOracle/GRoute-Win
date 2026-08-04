@@ -13,12 +13,54 @@ public enum ConfigSource
 
 public sealed class ProxyConfig : INotifyPropertyChanged
 {
-    public string Name { get; set; } = "";
+    private string _name = "";
+
+    public string Name
+    {
+        get => _name;
+        set
+        {
+            if (_name != value)
+            {
+                _name = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Name)));
+            }
+        }
+    }
+
     public string Protocol { get; set; } = "";
     public string TorBase { get; set; } = "";
     public string TorCountry { get; set; } = "";
-    public string Address { get; set; } = "";
-    public int Port { get; set; }
+
+    private string _address = "";
+
+    public string Address
+    {
+        get => _address;
+        set
+        {
+            if (_address != value)
+            {
+                _address = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Address)));
+            }
+        }
+    }
+
+    private int _port;
+
+    public int Port
+    {
+        get => _port;
+        set
+        {
+            if (_port != value)
+            {
+                _port = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Port)));
+            }
+        }
+    }
     public string Uuid { get; set; } = "";
     public string Username { get; set; } = "";
     public string Password { get; set; } = "";
