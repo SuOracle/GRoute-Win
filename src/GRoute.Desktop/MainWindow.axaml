@@ -897,12 +897,16 @@
                                                                     <TextBlock Text="{Binding Name, Converter={StaticResource FlagName}}"
                                                                                Foreground="White" FontSize="14" FontWeight="SemiBold"
                                                                                TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
-                                                                    <StackPanel Orientation="Horizontal" FlowDirection="LeftToRight"
-                                                                                IsVisible="{Binding !Locked}">
-                                                                        <TextBlock Text="{Binding Address}" Foreground="#9FB3D6" FontSize="11"/>
-                                                                        <TextBlock Text=":" Foreground="#9FB3D6" FontSize="11"/>
-                                                                        <c:VText Text="{Binding Port}" Foreground="#9FB3D6" FontSize="11"/>
-                                                                    </StackPanel>
+                                                                    <c:VText Foreground="#9FB3D6" FontSize="11" FlowDirection="LeftToRight"
+                                                                             TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                                                                             IsVisible="{Binding !Locked}">
+                                                                        <c:VText.Text>
+                                                                            <MultiBinding StringFormat="{}{0}:{1}">
+                                                                                <Binding Path="Address"/>
+                                                                                <Binding Path="Port"/>
+                                                                            </MultiBinding>
+                                                                        </c:VText.Text>
+                                                                    </c:VText>
                                                                 </StackPanel>
                                                             </Grid>
                                                             <Border Grid.Column="1" CornerRadius="5" Padding="8,2" Margin="16,0,8,0"
@@ -1878,18 +1882,31 @@
                                     <DataTemplate DataType="core:ScanResult">
                                         <Border Classes="glassRow" CornerRadius="11" Padding="13,10" Margin="0,0,0,8">
                                             <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
-                                                <Ellipse Grid.Column="0" Width="9" Height="9" VerticalAlignment="Center"
-                                                         Margin="0,0,12,0"
-                                                         Fill="{Binding Ms, Converter={StaticResource PingBrush}}"/>
+                                                <Panel Grid.Column="0" Width="14" Height="14" ClipToBounds="False"
+                                                       VerticalAlignment="Center" Margin="0,0,9,0">
+                                                    <Ellipse Classes="pingpulse" Width="14" Height="14"
+                                                             HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                             Fill="{Binding Ms, Converter={StaticResource PingBrush}}">
+                                                        <Ellipse.Effect>
+                                                            <BlurEffect Radius="4"/>
+                                                        </Ellipse.Effect>
+                                                    </Ellipse>
+                                                    <Ellipse Width="9" Height="9"
+                                                             HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                             Fill="{Binding Ms, Converter={StaticResource PingBrush}}"/>
+                                                </Panel>
                                                 <c:VText Grid.Column="1" Text="{Binding Ip}" Foreground="White" FontSize="13.5"
                                                            FontFamily="{StaticResource MonoFont}" FontWeight="Bold"
                                                            VerticalAlignment="Center"/>
                                                 <Border Grid.Column="2" CornerRadius="5" Padding="8,2" Margin="0,0,10,0"
+                                                        VerticalAlignment="Center"
                                                         Background="{Binding Ms, Converter={StaticResource PingBrush}, ConverterParameter=bg}"
                                                         BorderBrush="{Binding Ms, Converter={StaticResource PingBrush}, ConverterParameter=border}"
                                                         BorderThickness="1">
                                                     <c:VText Text="{Binding Ms, Converter={StaticResource PingLabel}}"
                                                                FontSize="11.5" FontWeight="SemiBold"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               TextAlignment="Center"
                                                                Foreground="{Binding Ms, Converter={StaticResource PingBrush}}"/>
                                                 </Border>
                                                 <Button Grid.Column="3" Classes="icon" Tag="{Binding Ip}" Click="CopyScanIp"

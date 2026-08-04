@@ -73,6 +73,7 @@ public partial class MainWindow : Window
     private byte[]? _pendingImport;
     private CancellationTokenSource? _autoSelectCts;
     private DispatcherTimer? _autoRefreshTimer;
+    private bool _autoRefreshBusy;
     private TrayIcon? _tray;
     private NativeMenuItem? _trayConnect;
     private NativeMenuItem? _trayModeProxy;
@@ -2871,8 +2872,10 @@ public partial class MainWindow : Window
         int total = _scanPool;
         SetVis(ScanProgressTrack, true);
         ScanProgressBar.Width = 0;
+        bool finished = false;
         var progress = new Progress<int>(d =>
         {
+            if (finished) return;
             ScanStatus.Text = $"Scanning {d}/{total}";
             double trackW = ScanProgressTrack.Bounds.Width;
             if (trackW > 0) ScanProgressBar.Width = trackW * d / total;
@@ -2881,6 +2884,7 @@ public partial class MainWindow : Window
         {
             int port = 443;
             var results = await CloudflareScanner.Scan(total, port, 50, progress, _scanCts.Token);
+            finished = true;
             foreach (var r in results) _scanResults.Add(r);
             ScanStatus.Text = results.Count == 0
                 ? "No responsive IPs found."
@@ -2889,20 +2893,25 @@ public partial class MainWindow : Window
         }
         catch (OperationCanceledException)
         {
+            finished = true;
             ScanStatus.Text = Strings.Get(_lang, "cf_stopped");
             SetVis(ScanResultsTitle, _scanResults.Count > 0);
         }
         catch (Exception ex)
         {
+            finished = true;
             ScanStatus.Text = ex.Message;
         }
         finally
         {
+            finished = true;
             ScanButton.IsEnabled = true;
             SetVis(ScanStopButton, false);
             SetVis(ScanProgressTrack, false);
             _scanCts.Dispose();
             _scanCts = null;
+            UpdateLayout();
+            QueueWindowHeight();
         }
     }
 
@@ -4214,8 +4223,9 @@ public partial class MainWindow : Window
         }
     }
 
-    private async Task RefreshAllSubs()
+    private async Task<int> RefreshAllSubs()
     {
+        int ok = 0;
         foreach (var sub in _store.Subscriptions.ToList())
         {
             try
@@ -4228,23 +4238,45 @@ public partial class MainWindow : Window
                     sub.Expire = result.UserInfo.Expire;
                 }
                 _store.UpsertSubscription(sub, result.Configs);
+                ok++;
             }
             catch
             {
             }
         }
+        ReloadSubs();
         RebuildGroups();
+        return ok;
     }
 
     private void SetupAutoRefresh()
     {
         _autoRefreshTimer?.Stop();
         _autoRefreshTimer = null;
-        int h = _store.AutoRefreshHours;
-        if (h <= 0) return;
-        _autoRefreshTimer = new DispatcherTimer { Interval = TimeSpan.FromHours(h) };
-        _autoRefreshTimer.Tick += async (_, _) => await RefreshAllSubs();
+        if (_store.AutoRefreshHours <= 0) return;
+        _autoRefreshTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(5) };
+        _autoRefreshTimer.Tick += (_, _) => AutoRefreshTick();
         _autoRefreshTimer.Start();
+        AutoRefreshTick();
+    }
+
+    private async void AutoRefreshTick()
+    {
+        int h = _store.AutoRefreshHours;
+        if (h <= 0 || _autoRefreshBusy) return;
+        if (_store.Subscriptions.Count == 0) return;
+        var last = _store.LastAutoRefreshUtc;
+        if (last is not null && DateTime.UtcNow - last.Value < TimeSpan.FromHours(h)) return;
+
+        _autoRefreshBusy = true;
+        try
+        {
+            if (await RefreshAllSubs() > 0) _store.SetLastAutoRefresh(DateTime.UtcNow);
+        }
+        finally
+        {
+            _autoRefreshBusy = false;
+        }
     }
 
     private static bool IsNewer(string latest, string current)
@@ -5239,6 +5271,7 @@ public partial class MainWindow : Window
         }
         _store.SaveNow();
         ReloadServers();
+        RefreshSelected();
         _editingId = null;
         GoBack();
     }
